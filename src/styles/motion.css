@@ -1,0 +1,56 @@
+/* Going Once: motion. Screen enter, the gavel, flying chips, floating deltas, and the reduced
+   motion cross fade. Nothing here runs unless a class or animation helper asks for it. */
+
+.chip-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.chip__disc--fly {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  margin: 0;
+}
+
+.float-delta {
+  position: fixed;
+  z-index: 55;
+  pointer-events: none;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 18px;
+  font-weight: 700;
+  transform: translate(-50%, 0);
+}
+
+.float-delta--gain {
+  color: var(--brass-text);
+}
+
+.float-delta--loss {
+  color: var(--oxblood-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .chip-layer,
+  .float-delta {
+    display: none !important;
+  }
+
+  .seal--torn {
+    clip-path: inset(0 0 0 0);
+    opacity: 0.4;
+  }
+}
