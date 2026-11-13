@@ -253,10 +253,16 @@ export class SocketRoomClient {
     const map = { bid: "game:bid", answer: "game:answer", steal: "game:steal", decline: "game:decline", advance: "game:advance" };
     const event = map[msg.t];
     if (!event) return;
-    if (msg.t === "bid") this._ack(event, { amount: msg.amount });
-    else if (msg.t === "answer") this._ack(event, { index: msg.index });
-    else if (msg.t === "steal") this._ack(event, { index: msg.index });
-    else this._ack(event, {});
+    const payload = msg.t === "bid" ? { amount: msg.amount } : msg.t === "answer" || msg.t === "steal" ? { index: msg.index } : {};
+    // A refused action must not be swallowed: say so, then let the next snapshot re-sync the screen.
+    this._ack(event, payload).then((response) => {
+      if (response && response.ok === false && response.error) this._actionRefused(response.error);
+    }).catch(() => {});
+  }
+
+  _actionRefused(message) {
+    this.lastRefusal = { message, at: Date.now() };
+    if (typeof this.onRefusal === "function") this.onRefusal(message);
   }
 
   async playAgain() {
