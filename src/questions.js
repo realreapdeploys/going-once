@@ -1,11 +1,12 @@
-// Going Once: question bank (72 questions, 6 categories x 3 difficulties x 4 questions).
+// Going Once: question bank (72 built-in classics, the extra bank, and the modern pack — see questions-modern.js).
 // Each question has exactly 4 options and exactly one correct answer (answerIndex, 0 to 3).
 // Difficulty: 1 = Common, 2 = Uncommon, 3 = Rare.
-// All facts are stable (no records or figures that change year to year).
+// All facts are settled history, not live records.
 
-export const CATEGORIES = ["Geography", "History", "Science", "Sport", "Film & TV", "Music", "Technology", "Arts & Literature"];
+export const CATEGORIES = ["Geography", "History", "Science", "Sport", "Film & TV", "Music", "Technology", "Arts & Literature", "Video Games & Streaming"];
 
 import { EXTRA_QUESTIONS } from "./questions-extra.js";
+import { MODERN_QUESTIONS } from "./questions-modern.js";
 
 export const QUESTIONS = [
   // ---------- Geography ----------
@@ -92,4 +93,5 @@ export const QUESTIONS = [
   { id: "mus-3-3", category: "Music", difficulty: 3, question: "Which Italian musical term means gradually getting louder?", options: ["Diminuendo", "Crescendo", "Staccato", "Legato"], answerIndex: 1 },
   { id: "mus-3-4", category: "Music", difficulty: 3, question: "Which composer wrote the opera The Magic Flute?", options: ["Giuseppe Verdi", "Giacomo Puccini", "Wolfgang Amadeus Mozart", "Richard Wagner"], answerIndex: 2 },
   ...EXTRA_QUESTIONS,
+  ...MODERN_QUESTIONS,
 ];
