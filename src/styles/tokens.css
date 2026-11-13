@@ -1,0 +1,42 @@
+:root {
+  --paper: #efe6d2;
+  --paper-2: #e6dac0;
+  --paper-3: #d9ccae;
+  --ink: #1c1a17;
+  --ink-soft: #4a443b;
+  --rule: #b9a880;
+  --oxblood: #7d1f1f;
+  --oxblood-ink: #7d1f1f;
+  --brass: #a6812f;
+  --brass-text: #6f5311;
+  --shadow: rgba(28, 26, 23, 0.16);
+  --font-display: "IM Fell English", Georgia, serif;
+  --font-body: "Libre Caslon Text", Georgia, serif;
+  --font-mono: "Courier Prime", "Courier New", monospace;
+  --paddle: #b98f5b;
+  --paddle-trim: #6d4a24;
+  --grain-opacity: 0.5;
+  --grain-blend: multiply;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-spring: cubic-bezier(0.3, 1.4, 0.5, 1);
+  --sheet: 1040px;
+  --gutter: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1a1713;
+    --paper-2: #221e19;
+    --paper-3: #2c2720;
+    --ink: #efe6d2;
+    --ink-soft: #bdb29b;
+    --rule: #4a4234;
+    --oxblood: #b8463a;
+    --oxblood-ink: #e07a6c;
+    --brass: #c9a553;
+    --brass-text: #d9b968;
+    --shadow: rgba(0, 0, 0, 0.5);
+    --grain-opacity: 0.28;
+    --grain-blend: screen;
+  }
+}
