@@ -1268,3 +1268,18 @@
 .lot__next {
   margin-top: 18px;
 }
+
+.rival--winner {
+  border-color: var(--brass);
+  box-shadow: 0 0 0 3px var(--brass), 5px 7px 0 var(--shadow);
+  z-index: 1;
+}
+
+.rival--winner .rival__portrait {
+  border-color: var(--brass);
+  background: color-mix(in srgb, var(--brass) 12%, var(--paper));
+}
+
+.rival--sunk {
+  filter: grayscale(0.55);
+}
