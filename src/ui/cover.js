@@ -117,6 +117,11 @@ export function coverScreen(app, handlers) {
     "div",
     { class: "cover__cta" },
     h("button", { class: "btn btn--primary btn--big", type: "button", onclick: handlers.onStart, "data-action": "start" }, buttonLabel),
+    h(
+      "button",
+      { class: "btn btn--ghost cover__room-btn", type: "button", onclick: handlers.onPrivateRoom, "data-action": "private-room" },
+      "Private room — play with friends",
+    ),
     finished
       ? h(
           "p",
@@ -173,7 +178,7 @@ export function coverScreen(app, handlers) {
       ),
     ),
     storageNote,
-    h("p", { class: "cover__fine" }, "Five lots. Three rivals. One thousand chips. Everyone gets the same sale."),
+    h("p", { class: "cover__fine" }, "Seven lots. Three rivals. One thousand chips. Everyone gets the same sale."),
   );
 
   const body = h("main", { id: "main", class: "sheet cover" }, header, cta, bidders, footer);
