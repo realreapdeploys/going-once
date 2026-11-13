@@ -4,9 +4,9 @@
 bot rivals, styled as a slightly shady old-world auction house printed as a paper catalogue.
 Everyone gets the same sale each day: same lots, same rivals, same seeds.
 
-You start with 1,000 chips. Five lots a day. For each lot you see only the category and the
+You start with 1,000 chips. Seven lots a day. For each lot you see only the category and the
 difficulty, never the question. Bid in secret, read your rivals' tells, and if you win the lot you
-have to answer for it. Lot five is **The Hammer**, a final all-play wager. Your final chip total is
+have to answer for it. Lot seven is **The Hammer**, a final all-play wager. Your final chip total is
 your score.
 
 Fully static: no accounts, no server, no tracking. Progress lives in your browser's local storage.
@@ -34,7 +34,7 @@ npm run e2e              # Playwright smoke test (needs a one-off `npx playwrigh
 
 The date string (`YYYY-MM-DD`, the player's local date) seeds everything. Sale No. 1 is
 **2026-11-14**; each local midnight a new sale opens. `buildDay(date)` derives the sale number,
-the five lots (category, difficulty, question, option order) and the three rivals from that seed,
+the seven lots (category, difficulty, question, option order) and the three rivals from that seed,
 so every player worldwide gets an identical day. Rival behaviour (who bids what, who bluffs, who
 knows the answer) is fixed per day and per seed, which is why bids are comparable and share text
 spoilers nothing.
@@ -44,11 +44,11 @@ storage key (`goingonce:dev`), with a small banner on screen. Ignored in product
 
 ## The game in one paragraph
 
-Bid 0 (pass) to half your purse (rounded down to a multiple of 5) on lots 1-4. Highest bid of at
+Bid 0 (pass) to half your purse (rounded down to a multiple of 5) on lots 1-6. Highest bid of at
 least 5 wins; ties break by a seeded order. The winner answers. Right gains the bid, wrong loses
 it — and if a rival winner answers wrongly and you were runner-up, you may **steal** the lot: the
 question with the winner's pick already struck out. A right steal pays your own bid plus half the
-failed bid; a wrong steal costs your own bid. The Hammer (lot 5) waives the house limit: everyone
+failed bid; a wrong steal costs your own bid. The Hammer (lot 7) waives the house limit: everyone
 wagers at least a quarter of their purse and everyone answers. Twenty seconds per answer; timeout
 is wrong; banks never go below zero; all bids are multiples of 5.
 
@@ -78,6 +78,26 @@ skill levels (used by `answerProbability` and `describeSkills`), boldness, a blu
 SVG portrait. The day's engine picks three of the roster by seed. Nothing else needs wiring up;
 the UI reads everything from the engine state and the roster, and the ledger row is generated from
 the same skills object.
+
+## Private rooms
+
+The cover has a "Private room" button. One player hosts: they get a five-character room code,
+pick the number of questions in the sale (3, 5, 7 or 10) and the difficulty (a bit of everything /
+common / uncommon / rare), and can remove players or disband the room while it is still in the
+lobby. Anyone with the code and the link can join, whatever their network — school and office
+wifi included: the room rides a public MQTT relay over WebSocket (broker.emqx.io with
+test.mosquitto.org as a fallback), so no unusual ports and no accounts are involved.
+
+How it actually works, honestly: the host's client is authoritative only for the lobby (settings,
+kick, disband, start). Every player plays the same seeded room sale **locally, against the bot
+rivals**, and their final chip total is published to the room when they finish. Everyone then sees
+a standings screen ranked by final chips. There is no shared game server, no anti-cheat, and chip
+totals are self-reported by each browser. Fine for a laugh with friends; not for money on the line.
+Rooms are ephemeral and nothing about them is stored.
+
+For anything real, run your own relay (a few lines of config on any machine with a TLS WebSocket
+frontend) or swap `src/room.js` for a WebSocket server of your own. The public brokers are free
+for everyone and rate-limited; do not hammer them.
 
 ## Persistence
 
@@ -143,7 +163,12 @@ engine, listed for honesty):
 
 ## Known limitations
 
-- The question bank is 72 questions (6 categories x 3 difficulties x 4). A full sale draws on them
-  without replacement per cell, but they repeat every few weeks of play.
+- Multiplayer is casual: self-reported tallies, public relays, no anti-cheat, no sale history.
+- The room race gives everyone the same lots but not a shared table: you never see each other's
+  bids or answers live. Real-time shared-turn play would need a game server.
+- 
+- The bank is ~1,000 questions across 8 categories x 3 difficulties, and it was written by a machine.
+  Most facts are high-confidence but the bank has not had a full human fact-check — treat it as a
+  good draft, not gospel, and verify anything you hear quoted in a pub argument.
 - No accounts, leaderboards or sync: progress is per device, per browser.
 - Share text is copied to the clipboard or shown selectable; there is no share sheet integration.
