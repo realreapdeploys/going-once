@@ -24,6 +24,7 @@ import { START_CHIPS } from "../src/engine.js";
 const PORT = Number(process.env.PORT) || 3001;
 const MAX_SEATS = 10;            // humans + bots, combined
 const MAX_LOTS = 20;
+const MAX_BOTS = 4;
 const MIN_LOTS = 3;
 const ALLOWED_LOTS = [3, 5, 7, 10, 12, 15, 20];
 const ALLOWED_DIFFICULTY = new Set(["mixed", "easy", "medium", "hard"]);
@@ -321,8 +322,8 @@ io.on("connection", (socket) => {
 
     if (existing.status !== "lobby") return done({ ok: false, error: "This sale has already started. Ask the house for a fresh table." });
     const humans = humanSeats(existing);
-    if (humans.length + existing.settings.botCount >= MAX_SEATS) {
-      return done({ ok: false, error: "This table is full (10 seats). Try another room." });
+    if (humans.length >= MAX_SEATS) {
+      return done({ ok: false, error: `This table is full (${MAX_SEATS} players). Try another room.` });
     }
     const nextId = `h-${Math.max(...existing.seats.map((s) => Number(String(s.id).replace(/\D/g, "")) || 0), 0) + 1}`;
     const seat = { id: nextId, kind: "human", name: cleanName(name), connected: true, ready: false, joinedAt: now(), socketId: socket.id, token: token() };
@@ -488,7 +489,7 @@ const clampLot = (v) => (ALLOWED_LOTS.includes(Number(v)) ? Number(v) : 7);
 const clampDifficulty = (v) => (ALLOWED_DIFFICULTY.has(String(v ?? "mixed")) ? String(v) : "mixed");
 const clampBots = (v) => {
   const n = Math.floor(Number(v));
-  return Number.isFinite(n) ? Math.min(4, Math.max(0, n)) : 0;
+  return Number.isFinite(n) ? Math.min(MAX_BOTS, Math.max(0, n)) : 0;
 };
 
 /* Garbage-collect dead rooms. */
