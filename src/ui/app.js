@@ -18,6 +18,7 @@ import {
   STEP,
   LOT_COUNT,
   EngineError,
+  createRoomGame,
 } from "../engine.js";
 import { ROSTER, getRivalById, describeSkills } from "../roster.js";
 import { CATEGORIES } from "../questions.js";
@@ -51,6 +52,8 @@ import { portraitMarkup, portraitLabel } from "./portrait.js";
 import { paddle, paddleSvg } from "./paddle.js";
 import * as anim from "./anim.js";
 import * as sound from "./sound.js";
+import { RoomClient } from "../room.js";
+import { roomSetupScreen, roomLobbyScreen, roomStandingsScreen } from "./room-screens.js";
 import { coverScreen } from "./cover.js";
 import { lotScreen, roomStrip } from "./lot.js";
 import { resultsScreen } from "./results.js";
@@ -82,6 +85,8 @@ export function startApp({ root, devDate = null } = {}) {
     persistent: true,
     liveEl: null,
     unlockedNoticeShown: false,
+    roomClient: null,
+    setup: null,
   };
 
   /* ---------------------------------------------------------------- storage */
@@ -110,6 +115,7 @@ export function startApp({ root, devDate = null } = {}) {
   }
 
   function persist() {
+    if (app.roomClient) return; // a room sale never touches the daily save
     if (!app.state) {
       store.saveProfile(app.profile);
       return;
@@ -164,8 +170,26 @@ export function startApp({ root, devDate = null } = {}) {
   function render() {
     clock.begin();
     if (isModalOpen()) return;
+    if (app.screen === "room-setup") {
+      mountScreen(roomSetupView());
+      return;
+    }
+    if (app.screen === "room-lobby") {
+      mountScreen(roomLobbyView());
+      return;
+    }
+    if (app.screen === "room-standings") {
+      mountScreen(roomStandingsView());
+      return;
+    }
     if (!app.state || app.state.phase === "finished") {
       if (app.state && app.state.phase === "finished") {
+        if (app.roomClient) {
+          finishRoomGame();
+          app.screen = "room-standings";
+          mountScreen(roomStandingsView());
+          return;
+        }
         finishGame();
         app.screen = "results";
         mountScreen(resultsView());
@@ -192,6 +216,7 @@ export function startApp({ root, devDate = null } = {}) {
   function coverView() {
     return coverScreen(app, {
       onStart: () => startOrResume(),
+      onPrivateRoom: () => openPrivateRoom(),
       onHowTo: (opener) => openHowToPlay(app, opener),
       onLedger: (opener) => openLedger(app, opener),
       onSound: toggleSound,
@@ -371,7 +396,185 @@ export function startApp({ root, devDate = null } = {}) {
     if (screen) screen.dispatchEvent(new CustomEvent("goingonce:newlot", { detail: { seq } }));
   }
 
-  /* ---------------------------------------------------------------- results */
+
+  /* ---------------------------------------------------------------- private rooms */
+
+  function ensureClient() {
+    if (!app.roomClient) {
+      const client = new RoomClient();
+      client.onUpdate = () => syncRoom();
+      app.roomClient = client;
+    }
+    return app.roomClient;
+  }
+
+  function syncRoom() {
+    const client = app.roomClient;
+    if (!client) return;
+    if (client.phase === "playing" && !app.state && client.roomSeed) {
+      startRoomSale();
+      return;
+    }
+    if (client.phase === "ended") {
+      app.state = null;
+      app.actions = [];
+      app.selection = null;
+      app.stealStage = false;
+      app.screen = "room-standings";
+      render();
+      return;
+    }
+    if (app.screen === "room-setup" || app.screen === "room-lobby" || app.screen === "room-standings") render();
+  }
+
+  function openPrivateRoom() {
+    sound.unlock();
+    app.setup = { mode: "choose", name: "", code: "", error: null, connecting: false };
+    app.screen = "room-setup";
+    render();
+  }
+
+  function releaseRoom() {
+    if (app.roomClient) app.roomClient.leave();
+    app.roomClient = null;
+    app.setup = null;
+    app.state = null;
+    app.actions = [];
+    app.timer = null;
+    app.selection = null;
+    app.stealStage = false;
+    app.screen = "cover";
+    render();
+  }
+
+  function startRoomSale() {
+    const client = app.roomClient;
+    if (!client || !client.roomSeed) return;
+    app.state = createRoomGame(client.roomSeed, {
+      lotCount: client.settings.lotCount,
+      difficulty: client.settings.difficulty,
+    });
+    app.actions = [];
+    app.timer = null;
+    app.selection = null;
+    app.stealStage = false;
+    app.revealDone = false;
+    const bounds = bidBounds(app.state);
+    app.bid = currentLot(app.state).isHammer ? bounds.min : 0;
+    app.screen = "lot";
+    render();
+  }
+
+  function finishRoomGame() {
+    const client = app.roomClient;
+    if (!client || !app.state) return;
+    client.finish(app.state.banks.player);
+  }
+
+  function copyRoomCode() {
+    const client = app.roomClient;
+    if (!client) return;
+    const code = client.code;
+    const done = () => announce(`Room code ${code} copied.`);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(done, done);
+    } else {
+      const area = document.createElement("textarea");
+      area.value = code;
+      area.setAttribute("readonly", "");
+      area.style.position = "fixed";
+      area.style.top = "-1000px";
+      document.body.appendChild(area);
+      area.select();
+      try { document.execCommand("copy"); } catch { /* no clipboard */ }
+      area.remove();
+      done();
+    }
+  }
+
+  function roomSetupView() {
+    return roomSetupScreen(app, {
+      onMode: (mode) => {
+        const draft = app.setup ?? {};
+        app.setup = { ...draft, mode, error: null, connecting: false };
+        if (app.roomClient) { app.roomClient.leave(); app.roomClient = null; }
+        render();
+      },
+      onCreate: (name) => {
+        const draft = app.setup;
+        draft.connecting = true;
+        draft.error = null;
+        render();
+        ensureClient();
+        app.roomClient
+          .createRoom(name)
+          .then(() => {
+            app.setup = null;
+            app.screen = "room-lobby";
+            render();
+          })
+          .catch((error) => {
+            draft.connecting = false;
+            draft.error = error && error.message ? error.message : "Could not open the room. Try again.";
+            if (app.roomClient) { app.roomClient.leave(); app.roomClient = null; }
+            render();
+          });
+      },
+      onJoin: (code, name) => {
+        const draft = app.setup;
+        draft.connecting = true;
+        draft.error = null;
+        render();
+        ensureClient();
+        app.roomClient
+          .joinRoom(code, name)
+          .then(() => {
+            app.setup = null;
+            app.screen = "room-lobby";
+            render();
+          })
+          .catch((error) => {
+            draft.connecting = false;
+            draft.error = error && error.message ? error.message : "Could not join the room. Check the code and try again.";
+            if (app.roomClient) { app.roomClient.leave(); app.roomClient = null; }
+            render();
+          });
+      },
+      onLeave: releaseRoom,
+    });
+  }
+
+  function roomLobbyView() {
+    const client = app.roomClient;
+    return roomLobbyScreen(app, {
+      onKick: (id, name) =>
+        openConfirm({
+          title: `Remove ${name}?`,
+          text: "They can rejoin later with the code — as long as you have not disbanded the room.",
+          confirmLabel: "Remove",
+          opener: null,
+          onConfirm: () => client && client.kick(id),
+        }),
+      onDisband: () =>
+        openConfirm({
+          title: "Disband the room?",
+          text: "Everyone at the table is sent back to the cover. The daily sale goes on as ever.",
+          confirmLabel: "Disband",
+          opener: null,
+          onConfirm: () => client && client.disband(),
+        }),
+      onStart: () => client && client.start(),
+      onSettings: (patch) => client && client.setSettings(patch),
+      onCopyCode: copyRoomCode,
+      onLeave: releaseRoom,
+    });
+  }
+
+  function roomStandingsView() {
+    return roomStandingsScreen(app, { onLeave: releaseRoom });
+  }
+
+    /* ---------------------------------------------------------------- results */
 
   function finishGame() {
     if (!app.state || app.state.phase !== "finished") return;
@@ -443,6 +646,7 @@ export function startApp({ root, devDate = null } = {}) {
 
   function checkDate() {
     if (app.devDate) return;
+    if (app.roomClient) return; // a room sale is in session; do not roll the daily over
     const now = localDateString();
     if (now === app.today) return;
     if (app.state && app.state.phase !== "finished") return;
