@@ -101,5 +101,5 @@ test("data files are consistent", () => {
     for (const c of CATEGORIES) assert.ok(r.skills[c] >= 0 && r.skills[c] <= 1, `${r.id} ${c}`);
     assert.ok(r.portrait.length > 50);
   }
-  assert.equal(QUESTIONS.length, 72);
+  assert.ok(QUESTIONS.length >= 850, "expanded question bank");
 });
