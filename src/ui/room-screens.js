@@ -1,8 +1,9 @@
-// Going Once: private rooms — host a salle, share a code, everyone plays the
-// same sale and compares the books at the end. No accounts, no server of ours;
-// traffic rides a public WebSocket relay. Casual, self-reported tallies.
+// Going Once: private rooms — host a salle, share a code, the table plays one
+// sale together over a public WebSocket relay. The host's browser keeps the
+// books; no accounts, no server of ours.
 
 import { formatChips } from "../format.js";
+import { START_CHIPS } from "../engine.js";
 import { h, cx } from "./dom.js";
 
 function backLink(label, onClick) {
@@ -114,7 +115,7 @@ export function roomSetupScreen(app, handlers) {
     h(
       "p",
       { class: "room__fine" },
-      "Rooms share one sale, played on every phone at the table, and compare the books at the end. Names only — no accounts, no scores stored anywhere we keep.",
+      "One sale, played together on every phone at the table — shared lots, shared bids, the host keeps the books. Names only, no accounts.",
     ),
   );
   return { body };
@@ -204,6 +205,30 @@ export function roomLobbyScreen(app, handlers) {
             ),
           ),
           h(
+            "label",
+            { class: "room__field room__field--inline" },
+            h("span", { class: "label" }, "Bots at the table"),
+            h(
+              "select",
+              {
+                class: "room__select",
+                onchange: (e) => handlers.onSettings({ botCount: Number(e.target.value) }),
+              },
+              [0, 1, 2, 3].map((n) =>
+                h(
+                  "option",
+                  { value: String(n), selected: (client.settings.botCount ?? 2) === n ? "" : null },
+                  n === 0 ? "No bots — players only" : n === 1 ? "1 bot" : `${n} bots`,
+                ),
+              ),
+            ),
+          ),
+          h(
+            "p",
+            { class: "room__table-line" },
+            `At the table: ${client.players.length} ${client.players.length === 1 ? "player" : "players"} + ${client.settings.botCount ?? 2} ${(client.settings.botCount ?? 2) === 1 ? "bot" : "bots"} — the saleroom seats ${client.players.length + (client.settings.botCount ?? 2)}.`,
+          ),
+          h(
             "button",
             { class: "btn btn--primary btn--big room__start", type: "button", onclick: handlers.onStart },
             "Open the sale",
@@ -253,55 +278,77 @@ export function roomLobbyScreen(app, handlers) {
 export function roomStandingsScreen(app, handlers) {
   const client = app.roomClient;
   const ended = client.phase === "ended";
-  const rows = client.results();
-  const waiting = rows.filter((r) => !r.finished).map((r) => r.name);
-  const done = rows.filter((r) => r.finished);
-  const leader = done.length ? done[0] : null;
+  const finalRows = Array.isArray(app.roomFinal) ? app.roomFinal : null;
 
   let verdict;
-  if (ended) {
+  let list;
+  if (finalRows && finalRows.length) {
+    const leader = finalRows[0];
+    const mine = finalRows.find((row) => row.id === "player");
+    verdict = mine && mine.rank === leader.rank
+      ? "The table is yours."
+      : `${leader.name} takes the honours.`;
+    list = h(
+      "ol",
+      { class: "room__standings" },
+      finalRows.map((row) =>
+        h(
+          "li",
+          {
+            class: cx("plate room__standing", row.rank === leader.rank && "room__standing--leader"),
+            key: row.id,
+          },
+          h("span", { class: "room__standing-place num" }, `${row.rank}.`),
+          h(
+            "div",
+            { class: "room__standing-info" },
+            h(
+              "span",
+              { class: "room__standing-name" },
+              row.name,
+              row.id === "player" ? h("span", { class: "room__standing-you" }, " (you)") : null,
+              row.kind === "bot" ? h("span", { class: "room__standing-you" }, " (bot)") : null,
+            ),
+            h(
+              "span",
+              { class: "room__standing-chips num" },
+              `${formatChips(row.chips)} chips  (${row.chips >= START_CHIPS ? "+" : ""}${formatChips(row.chips - START_CHIPS)})`,
+            ),
+          ),
+          row.rank === leader.rank ? h("span", { class: "stamp stamp--gain stamp--small" }, "Winner") : null,
+        ),
+      ),
+    );
+  } else if (ended) {
     verdict = client.outcome === "kicked" ? "You were removed from the room." : "The room was disbanded before the books closed.";
-  } else if (client.allFinished && leader) {
-    verdict = leader.id === client.myId ? "The table is yours." : `${leader.name} takes the honours.`;
+    list = h(
+      "div",
+      { class: "plate plate--paper room__ended" },
+      h("p", { class: "room__ended-title" }, verdict),
+      h("p", { class: "room__ended-sub" }, "The daily sale goes on as ever."),
+    );
   } else {
     verdict = "The lots are still falling.";
+    list = h(
+      "div",
+      { class: "plate plate--paper room__ended" },
+      h("p", { class: "room__ended-title" }, "The hammer has not fallen yet."),
+      h("p", { class: "room__ended-sub" }, "The books are tallied when the last lot closes."),
+    );
   }
 
-  const list = h(
-    "ol",
-    { class: "room__standings" },
-    rows.map((row) => {
-      const place = row.finished ? rows.filter((r) => r.finished && r.chips > row.chips).length + 1 : null;
-      const isLeader = leader && row.id === leader.id && client.allFinished;
-      return h(
-        "li",
-        { class: cx("plate room__standing", !row.finished && "room__standing--waiting", isLeader && "room__standing--leader"), key: row.id },
-        h("span", { class: "room__standing-place num" }, place ? `${place}.` : "—"),
-        h(
-          "div",
-          { class: "room__standing-info" },
-          h("span", { class: "room__standing-name" }, row.name, row.id === client.myId ? h("span", { class: "room__standing-you" }, " (you)") : null),
-          h(
-            "span",
-            { class: "room__standing-chips num" },
-            row.finished ? `${formatChips(row.chips)} chips` : "Still in the saleroom",
-          ),
-        ),
-        isLeader ? h("span", { class: "stamp stamp--gain stamp--small" }, "Winner") : null,
-      );
-    }),
-  );
-
+  const good = Boolean(finalRows && finalRows.length);
   const body = h(
     "main",
     { id: "main", class: "sheet room" },
     roomHeader(`Room ${client.code} — the books`, "The hammer has fallen"),
-    h("p", { class: "verdict verdict--good plate plate--paper", role: "status" }, h("span", { class: "verdict__title" }, verdict)),
+    h(
+      "p",
+      { class: cx("verdict", good ? "verdict--good" : "verdict--flat", "plate plate--paper"), role: "status" },
+      h("span", { class: "verdict__title" }, verdict),
+    ),
     list,
-    !ended && !client.allFinished
-      ? h("p", { class: "room__fine" }, `Waiting for ${waiting.join(", ")}… this page updates itself as answers come in.`)
-      : null,
-    h("p", { class: "room__fine" }, "Room tallies are self-reported by each browser at the table — a dropped connection can leave someone uncounted."),
+    h("p", { class: "room__fine" }, "Every seat played the same lots, in the same order, at the same table. The host keeps the books."),
     backLink("Back to the cover", handlers.onLeave),
   );
   return { body };
