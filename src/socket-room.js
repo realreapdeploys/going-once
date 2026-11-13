@@ -36,6 +36,7 @@ export class SocketRoomClient {
     this.maxSeats = MAX_SEATS;
     this.lotOptions = LOT_OPTIONS;
     this.botOptions = BOT_ROWS;
+    this.maxBots = Math.max(...BOT_ROWS);
     this._token = null;
   }
 
@@ -193,9 +194,8 @@ export class SocketRoomClient {
     const merged = { ...this.settings, ...(partial ?? {}) };
     // clamp bots to what the seats can hold when the table is full
     const humans = this.players.length || 1;
-    if (humans + Number(merged.botCount ?? 0) > this.maxSeats) {
-      merged.botCount = Math.max(0, this.maxSeats - humans);
-    }
+    // humans are the capped seats; bots are the host's extra company on top
+    merged.botCount = Math.max(0, Math.min(Number(merged.botCount ?? 0), this.maxBots));
     this.settings = merged;
     this.notify();
     await this._ack("lobby:update", { settings: merged });
