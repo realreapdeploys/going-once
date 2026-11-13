@@ -345,8 +345,6 @@ io.on("connection", (socket) => {
     const lotCount = clampLot(payload?.settings?.lotCount);
     const difficulty = clampDifficulty(payload?.settings?.difficulty);
     const botCount = clampBots(payload?.settings?.botCount);
-    const humans = humanSeats(room).length;
-    if (humans + botCount > MAX_SEATS) return done({ ok: false, error: `Too many bots for this table — at most ${MAX_SEATS - humans} can sit.` });
     room.settings = { lotCount, difficulty, botCount };
     broadcastLobby(io, room);
     return done({ ok: true });
