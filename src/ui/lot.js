@@ -64,7 +64,7 @@ function tagStrip(state) {
       ),
     );
   }
-  return h("ol", { class: "tags", "aria-label": "The five lots" }, tags);
+  return h("ol", { class: "tags", "aria-label": "The seven lots" }, tags);
 }
 
 function purseBlock(app) {
@@ -329,6 +329,64 @@ function stealPanel(app, handlers) {
   );
 }
 
+
+function verdictPanel(state) {
+  const record = state.history[state.lotIndex];
+  if (!record) return null;
+  const surname = (id) => {
+    const rival = rivalById(id);
+    return rival ? surnameOf(rival.name) : id;
+  };
+  let title, sub, tone = "flat", stampText = null;
+  if (record.isHammer) {
+    const r = record.results && record.results.player;
+    const youRight = Boolean(r && r.correct);
+    title = youRight ? "Right, on the Hammer." : r ? "Wrong, on the Hammer." : "The Hammer falls.";
+    sub = youRight ? "Your stake comes back to you, doubled." : "Your stake is forfeit to the saleroom.";
+    sub = youRight ? `Right answer. ${formatChips(r.wager)} chips on the table.` : r ? `Wrong answer. ${formatChips(r.wager)} chips, gone.` : sub;
+    tone = youRight ? "good" : "bad";
+    stampText = youRight ? "Right" : "Wrong";
+  } else if (record.passedIn) {
+    title = "Passed in.";
+    sub = record.steal && record.steal.declined ? "The steal was waved off. The lot stays with the saleroom." : "Nobody raised a hand. The lot stays with the saleroom.";
+    stampText = "Passed in";
+  } else if (record.steal && record.steal.by) {
+    const byPlayer = record.steal.by === "player";
+    if (record.steal.correct) {
+      title = byPlayer ? "Snatched, and rightly." : `${surname(record.steal.by)} snatched it.`;
+      sub = byPlayer ? "A right answer, and the lot comes home with you." : `${surname(record.steal.by)} took it on a right answer.`;
+      tone = byPlayer ? "good" : "bad";
+      stampText = "Sold";
+    } else {
+      title = byPlayer ? "Wrong. The stake is forfeit." : `${surname(record.steal.by)} went wrong.`;
+      sub = byPlayer ? "The stake goes to the saleroom." : `${surname(record.steal.by)} said it wrongly.`;
+      tone = byPlayer ? "bad" : "flat";
+      stampText = "Forfeit";
+    }
+  } else if (record.winnerId === "player") {
+    title = record.winnerCorrect ? "The lot is yours." : "Wrong, with the lot.";
+    sub = record.winnerCorrect ? `Answered right, for ${formatChips(record.bids.player)} chips.` : `Answered wrong. ${formatChips(record.bids.player)} chips, forfeit.`;
+    tone = record.winnerCorrect ? "good" : "bad";
+    stampText = record.winnerCorrect ? "Sold" : "Forfeit";
+  } else if (record.winnerId) {
+    title = `Sold, to ${surname(record.winnerId)}.`;
+    sub = record.winnerCorrect ? `Answered right, for ${formatChips(record.bids[record.winnerId])} chips.` : `Answered wrong. ${formatChips(record.bids[record.winnerId])} chips, forfeit.`;
+    tone = record.winnerCorrect ? "bad" : "flat";
+    stampText = record.winnerCorrect ? "Sold" : "Forfeit";
+  } else {
+    title = "Passed in.";
+    sub = "Nobody raised a hand. The lot stays with the saleroom.";
+    stampText = "Passed in";
+  }
+  return h(
+    "div",
+    { class: cx("verdict plate plate--paper", tone === "good" && "verdict--good", tone === "bad" && "verdict--bad"), "data-verdict": "", role: "status" },
+    stampText ? h("span", { class: "verdict__stamp", "data-verdict-stamp": "" }, stamp(stampText, { gain: tone === "good", seed: state.lotIndex })) : null,
+    h("p", { class: "verdict__title" }, title),
+    h("p", { class: "verdict__sub" }, sub),
+  );
+}
+
 function ledgerPanel(state, app) {
   const record = state.history[state.lotIndex];
   if (!record) return null;
@@ -483,6 +541,7 @@ export function lotScreen(app, handlers) {
         questionPanel(state, app, handlers),
         timerBar(),
         phase === "stealing" ? stealPanel(app, handlers) : null,
+        phase === "resolved" ? verdictPanel(state) : null,
         phase === "resolved" ? ledgerPanel(state, app) : null,
         phase === "resolved" ? lotReview(state, app, handlers) : null,
         phase === "resolved"
@@ -612,6 +671,24 @@ function wire(app, handlers) {
   if (app.state.phase === "resolved") {
     const fill = screen.querySelector("[data-timer-fill]");
     if (fill) fill.style.transform = "scaleX(0)";
+    // The outcome, shown clearly: who took the lot, and whether they were right.
+    const record = app.state.history[app.state.lotIndex];
+    const winnerId = record ? record.winnerId : null;
+    const stolenBy = record && record.steal && record.steal.by ? record.steal.by : null;
+    const highlightId = winnerId && winnerId !== "player" ? winnerId : stolenBy && stolenBy !== "player" ? stolenBy : null;
+    const winnerCard = highlightId ? screen.querySelector(`[data-rival="${highlightId}"]`) : null;
+    const rivalCards = Array.from(screen.querySelectorAll("[data-rival]"));
+    if (winnerCard) anim.winnerBeat(winnerCard, rivalCards);
+    else if (record && !record.passedIn && rivalCards.length) anim.winnerBeat(null, rivalCards);
+    const verdict = screen.querySelector("[data-verdict]");
+    if (verdict) anim.verdictRise(verdict);
+    const stampEl = screen.querySelector("[data-verdict-stamp]");
+    if (stampEl) anim.stampIn(stampEl);
+    const purse = screen.querySelector("[data-purse-value]");
+    if (purse && record) {
+      const delta = record.deltas.player;
+      if (delta !== 0) anim.floatDelta(purse, `${delta > 0 ? "+" : "−"}${formatChips(Math.abs(delta))}`, delta < 0);
+    }
   }
 }
 
