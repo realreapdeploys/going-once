@@ -100,6 +100,23 @@ lots are marked wrong after 20, and a steal is declined if the runner-up falls s
 couch of phones will not stall the table. A bot winner resolves instantly on the host; at the
 Hammer everyone who wagered answers.
 
+### How the bots bid
+
+Bots are there to be beaten. A bot bids a slice of what a lot is *worth* — the chips a winning
+bid pays back when the answer is right — sized by its chance of knowing the answer and by its
+personality (boldness, bluff, its strong and weak categories). It never bids from the size of its
+purse, so a bot that got lucky early cannot simply outbid everyone for the rest of the sale, and
+it bids on what it *believes* it knows rather than on the answer, so it does not only win the lots
+it is about to get right. Category skills are pulled toward the middle of the table, so a
+specialist is better on its subjects than on its weak ones without being unbeatable on them.
+
+`tune-bots.mjs` plays thousands of full sales against five player styles and prints the numbers —
+run it after touching any of the above:
+
+```
+node tune-bots.mjs          # ~300 sales per style; SIMS=1000 for a tighter read
+```
+
 Answers, bot rolls and other players' in-flight bids never leave the host's device: snapshots
 are stripped to what the room may see (bids stay sealed until the lot closes, `answerIndex` for
 the current lot is withheld until it resolves).
