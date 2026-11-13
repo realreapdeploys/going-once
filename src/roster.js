@@ -141,6 +141,39 @@ export const ROSTER = Object.freeze([
   }
 ]);
 
+
+// Guests at a room table are NOT the daily saleroom's characters, so they get their own
+// chalk-style guest portraits — no faces borrowed from the six rivals.
+const GUEST_PORTRAITS = [
+  `
+  <ellipse cx="60" cy="68" rx="26" ry="32"/>
+  <path d="M10 140 C12 112 34 103 60 103 C86 103 108 112 110 140"/>
+  <path d="M30 55 C30 28 90 28 90 55"/>
+  <path d="M21 55 H99"/>
+  <path d="M52 108 L60 116 L68 108"/>
+  <circle cx="50" cy="71" r="2" fill="currentColor" stroke="none"/>
+  <circle cx="70" cy="71" r="2" fill="currentColor" stroke="none"/>
+  <path d="M50 84 C56 87 64 87 70 84"/>`,
+  `
+  <ellipse cx="60" cy="68" rx="26" ry="32"/>
+  <path d="M10 140 C12 112 34 103 60 103 C86 103 108 112 110 140"/>
+  <circle cx="48" cy="70" r="7.5"/>
+  <circle cx="72" cy="70" r="7.5"/>
+  <path d="M55.5 70 H64.5"/>
+  <path d="M40.5 69 H30 M79.5 69 H90"/>
+  <circle cx="50" cy="70" r="1.4" fill="currentColor" stroke="none"/>
+  <circle cx="70" cy="70" r="1.4" fill="currentColor" stroke="none"/>
+  <path d="M50 90 C56 94 64 94 70 90"/>`,
+  `
+  <ellipse cx="60" cy="68" rx="26" ry="32"/>
+  <path d="M10 140 C12 112 34 103 60 103 C86 103 108 112 110 140"/>
+  <path d="M26 58 C24 20 92 22 80 56 C76 44 40 44 26 58 Z"/>
+  <circle cx="50" cy="72" r="2" fill="currentColor" stroke="none"/>
+  <circle cx="70" cy="72" r="2" fill="currentColor" stroke="none"/>
+  <circle cx="89" cy="84" r="2.5"/>
+  <path d="M50 89 C56 95 66 95 74 89"/>`,
+];
+
 // Room guests and hosts: humans at the table get pseudo-rival entries so every
 // card, ledger and panel can render them the same as the saleroom's fixtures.
 const ROOM_SEAT_REGISTRY = new Map();
@@ -150,20 +183,20 @@ const ROOM_SKILLS = { "Geography": 0.5, "History": 0.5, "Science": 0.5, "Sport":
 export function registerRoomSeats(seats) {
   ROOM_SEAT_REGISTRY.clear();
   if (!Array.isArray(seats)) return;
-  let donorIndex = 1;
+  let guestIndex = 0;
   for (const seat of seats) {
     if (seat.kind !== "human") continue;
-    const donor = ROSTER[donorIndex % ROSTER.length];
-    donorIndex += 2;
+    const portrait = GUEST_PORTRAITS[guestIndex % GUEST_PORTRAITS.length];
+    guestIndex += 1;
     ROOM_SEAT_REGISTRY.set(seat.id, {
       id: seat.id,
       name: seat.name,
-      title: "At the table",
-      tagline: "A guest at your table.",
+      title: "A guest at the table",
+      tagline: "Playing with you, not against the house.",
       boldness: 0.5,
       bluff: 0.1,
       skills: { ...ROOM_SKILLS },
-      portrait: donor.portrait,
+      portrait,
     });
   }
 }
