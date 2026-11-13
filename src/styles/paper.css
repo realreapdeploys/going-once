@@ -333,3 +333,6 @@ body::before {
 .room__standing-name { font-size: 17px; }
 .room__standing-you { color: var(--ink-soft); }
 .room__standing-chips { color: var(--ink-soft); font-size: 14px; }
+
+.room__table-line { margin: 0; text-align: center; color: var(--ink-soft); font-style: italic; font-size: 14px; }
+.dock__locked .ruler, .dock__locked .field { opacity: .55; }
