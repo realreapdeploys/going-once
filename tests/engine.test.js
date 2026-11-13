@@ -248,7 +248,7 @@ test("player wins alone and answers wrong or times out: loses the bid", () => {
 test("player can bottom out at 0 in the Hammer but never below", () => {
   let s = toHammer(createGame(LAUNCH_DATE));
   s = reduce(s, { type: "bid", amount: 1000 });
-  s = reduce(s, { type: "answer", index: (s.lots[4].answerIndex + 1) % 4 });
+  s = reduce(s, { type: "answer", index: (s.lots[LOT_COUNT - 1].answerIndex + 1) % 4 });
   assert.equal(s.banks.player, 0);
   s = reduce(s, { type: "next" });
   assert.equal(s.phase, "finished");
@@ -375,9 +375,9 @@ test("the Hammer: wager minimum is enforced and every bidder answers", () => {
   assert.throws(() => reduce(s, { type: "bid", amount: 100 }), (e) => e.code === "BAD_BID");
   s = reduce(s, { type: "bid", amount: 250 });
   assert.equal(s.phase, "answering");
-  s = reduce(s, { type: "answer", index: s.lots[4].answerIndex });
+  s = reduce(s, { type: "answer", index: s.lots[LOT_COUNT - 1].answerIndex });
   assert.equal(s.phase, "resolved");
-  const rec = s.history[4];
+  const rec = s.history[LOT_COUNT - 1];
   assert.equal(s.banks.player, 1250);
   assert.equal(rec.results.player.correct, true);
   assert.equal(outcomeKind(rec), "won");
@@ -393,8 +393,8 @@ test("the Hammer: a wrong answer loses the wager and the rivals settle too", () 
   }
   assert.equal(s.lotIndex, LOT_COUNT - 1);
   s = reduce(s, { type: "bid", amount: 600 });
-  s = reduce(s, { type: "answer", index: (s.lots[4].answerIndex + 1) % 4 });
-  const rec = s.history[4];
+  s = reduce(s, { type: "answer", index: (s.lots[LOT_COUNT - 1].answerIndex + 1) % 4 });
+  const rec = s.history[LOT_COUNT - 1];
   assert.equal(s.banks.player, 400);
   for (const id of s.rivals) {
     const r = rec.results[id];
