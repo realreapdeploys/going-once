@@ -1,0 +1,263 @@
+/* Going Once: the paper. Grain texture, plates, stamps and the print misregistration shadow. */
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  mix-blend-mode: var(--grain-blend);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.34'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+#app {
+  position: relative;
+  z-index: 1;
+}
+
+/* A plate: 2px ink frame, a 1px rule inset by 5px, square corners, hard shadow. */
+.plate {
+  position: relative;
+  background: var(--paper-2);
+  border: 2px solid var(--ink);
+  border-radius: 1px;
+  padding: 18px;
+  box-shadow: 3px 3px 0 var(--shadow);
+}
+
+.plate::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 1px solid var(--rule);
+  pointer-events: none;
+  border-radius: 1px;
+}
+
+.plate--flush {
+  padding: 0;
+}
+
+.plate--paper {
+  background: var(--paper);
+}
+
+.plate--bare {
+  background: transparent;
+  box-shadow: none;
+}
+
+.plate__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+/* Margin note: italic, ruled, used for the rival tell lines and lot notes. */
+.note {
+  font-style: italic;
+  color: var(--ink-soft);
+  border-left: 1px solid var(--rule);
+  padding-left: 10px;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+/* Stamps: double border box, fixed rotation, oxblood or brass. */
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px 5px;
+  border: 2px solid currentColor;
+  border-radius: 1px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 20px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--oxblood-ink);
+  background: color-mix(in srgb, var(--oxblood) 8%, transparent);
+  transform: rotate(var(--tilt, -3deg));
+  white-space: nowrap;
+  line-height: 1.1;
+}
+
+.stamp::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 1px solid currentColor;
+  border-radius: 1px;
+}
+
+.stamp {
+  position: relative;
+}
+
+.stamp--gain {
+  color: var(--brass-text);
+  background: color-mix(in srgb, var(--brass) 12%, transparent);
+}
+
+.stamp--small {
+  font-size: 14px;
+  padding: 4px 8px 3px;
+  letter-spacing: 0.12em;
+}
+
+.stamp--plain {
+  transform: none;
+}
+
+/* Chip disc: brass coin drawn in CSS. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.chip__disc {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  flex: none;
+  background: radial-gradient(circle at 38% 34%, color-mix(in srgb, var(--brass) 70%, #fff 30%), var(--brass) 62%, var(--brass-text) 100%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brass-text) 70%, transparent), inset 0 0 0 4px color-mix(in srgb, var(--brass) 40%, transparent);
+  position: relative;
+}
+
+.chip__disc::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--brass-text) 55%, transparent);
+}
+
+.chip__value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 16px;
+}
+
+.chip--big .chip__disc {
+  width: 20px;
+  height: 20px;
+}
+
+.chip--big .chip__value {
+  font-size: 20px;
+}
+
+.delta {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+}
+
+.delta--gain {
+  color: var(--brass-text);
+}
+
+.delta--loss {
+  color: var(--oxblood-ink);
+}
+
+.delta--none {
+  color: var(--ink-soft);
+}
+
+/* Lot tags in the header: five small numbered tags. */
+.tags {
+  display: flex;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tag {
+  position: relative;
+  width: 28px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--rule);
+  border-bottom-width: 2px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-soft);
+  background: transparent;
+  border-radius: 0 0 1px 1px;
+}
+
+.tag--current {
+  border-color: var(--ink);
+  border-bottom-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 700;
+}
+
+.tag--won,
+.tag--stole {
+  color: var(--brass-text);
+  border-color: color-mix(in srgb, var(--brass) 60%, var(--rule));
+  font-size: 15px;
+}
+
+.tag--lost {
+  color: var(--oxblood-ink);
+  border-color: color-mix(in srgb, var(--oxblood) 50%, var(--rule));
+  font-size: 15px;
+}
+
+.tag--pass {
+  color: var(--ink-soft);
+  font-size: 16px;
+}
+
+.tag--hammer::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 4px;
+  height: 4px;
+  background: var(--brass);
+  transform: rotate(45deg);
+}
+
+/* Dev banner */
+.dev-banner {
+  background: var(--oxblood);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-align: center;
+  padding: 4px 10px;
+}
+
+/* Quiet toast */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  z-index: 80;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 10px 16px;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  box-shadow: 3px 3px 0 var(--shadow);
+  max-width: calc(100vw - 32px);
+}
