@@ -37,7 +37,7 @@ export function rivalCard(id, { state = null, tell = false, compact = false } = 
   if (!rival) return null;
   const { strong, weak } = describeSkills(rival, Object.keys(rival.skills));
   const bank = state ? state.banks[id] : null;
-  const line = tell && state ? rivalTell(state, id) : null;
+  const line = tell && state && state.rolls ? rivalTell(state, id) : null;
   const surname = surnameOf(rival.name);
 
   return h(
