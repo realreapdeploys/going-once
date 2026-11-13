@@ -311,6 +311,7 @@ export function applySteal(state, seat, index) {
   if (state.phase !== "stealing") throw new Error("BAD_PHASE");
   if (seat !== state.stealFor) throw new Error("NOT_AWAITED");
   const cur = state.current;
+  if (!cur) throw new Error("NO_LOT");
   const lot = state.lots[state.lotIndex];
   if (cur.winnerPick === index) throw new Error("BAD_ANSWER");
   const correct = index === lot.answerIndex;
@@ -325,6 +326,7 @@ export function applyDecline(state, seat) {
   if (state.phase !== "stealing") throw new Error("BAD_PHASE");
   if (seat !== state.stealFor) throw new Error("NOT_AWAITED");
   const cur = state.current;
+  if (!cur) throw new Error("NO_LOT");
   cur.steal = { by: seat, correct: false, pick: null, declined: true };
   cur.passedIn = true;
   state.stealFor = null;
