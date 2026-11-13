@@ -118,7 +118,7 @@ function questionPanel(state, app, handlers) {
   if (!showQuestion) return null;
 
   const phase = state.phase;
-  const choosing = phase === "answering" || (phase === "stealing" && app.stealStage);
+  const choosing = (phase === "answering" || (phase === "stealing" && app.stealStage)) && roomAwaitingMe(app, phase);
   const eliminated = phase === "stealing" && state.current ? state.current.winnerPick : null;
   const correct = record ? lot.answerIndex : null;
 
@@ -288,7 +288,45 @@ function bidControl(app, handlers) {
     ),
   );
 
+  if (app.roomClient && app.roomLockedBid != null) {
+    control.classList.add("dock__locked");
+    const confirm = control.querySelector("[data-confirm]");
+    if (confirm) {
+      confirm.disabled = true;
+      confirm.textContent = `Bid locked at ${formatChips(app.roomLockedBid)} — waiting for the table`;
+    }
+    control.querySelectorAll("[data-pick]").forEach((btn) => { btn.disabled = true; });
+    const range = control.querySelector(".ruler");
+    if (range) range.disabled = true;
+    const num = control.querySelector("[data-number]");
+    if (num) num.disabled = true;
+  }
   return control;
+}
+
+
+/** In room mode, is it this device's turn to answer / steal? */
+function roomAwaitingMe(app, phase) {
+  if (!app.roomClient) return true;
+  if (phase === "answering") {
+    const a = app.state.current && app.state.current.awaiting;
+    return !Array.isArray(a) || a.includes("player");
+  }
+  if (phase === "stealing") return Boolean(app.stealForPlayer);
+  return true;
+}
+
+function stealWaitPanel(state) {
+  const cur = state.current || {};
+  const name = cur.stealFor && cur.stealFor !== "player" ? rivalById(cur.stealFor) : null;
+  const label = name ? surnameOf(name.name) : "The runner-up";
+  return h(
+    "div",
+    { class: "steal plate plate--paper", "data-steal": "" },
+    h("p", { class: "label" }, "The lot is loose"),
+    h("h2", { class: "steal__head" }, `${label} is deciding.`),
+    h("p", { class: "steal__line" }, "The lot hangs in the air until the table hears their call."),
+  );
 }
 
 function stealPanel(app, handlers) {
@@ -540,26 +578,38 @@ export function lotScreen(app, handlers) {
         auctioneerLine(""),
         questionPanel(state, app, handlers),
         timerBar(),
-        phase === "stealing" ? stealPanel(app, handlers) : null,
+        phase === "stealing"
+          ? (app.roomClient && !roomAwaitingMe(app, "stealing") ? stealWaitPanel(state) : stealPanel(app, handlers))
+          : null,
         phase === "resolved" ? verdictPanel(state) : null,
         phase === "resolved" ? ledgerPanel(state, app) : null,
         phase === "resolved" ? lotReview(state, app, handlers) : null,
         phase === "resolved"
-          ? h(
-              "div",
-              { class: "lot__next" },
-              h(
-                "button",
-                { class: "btn btn--primary btn--wide", type: "button", "data-next": "", onclick: handlers.onNext },
-                state.lotIndex >= LOT_COUNT - 1 ? "Close the sale" : "Turn the page",
-              ),
-            )
+          ? app.roomClient && !app.roomClient.isHost
+            ? h(
+                "div",
+                { class: "lot__next" },
+                h(
+                  "button",
+                  { class: "btn btn--ghost btn--wide", type: "button", disabled: "" },
+                  state.lotIndex >= state.lots.length - 1 ? "The host closes the sale\u2026" : "The host turns the page\u2026",
+                ),
+              )
+            : h(
+                "div",
+                { class: "lot__next" },
+                h(
+                  "button",
+                  { class: "btn btn--primary btn--wide", type: "button", "data-next": "", onclick: handlers.onNext },
+                  state.lotIndex >= state.lots.length - 1 ? "Close the sale" : "Turn the page",
+                ),
+              )
           : null,
       ),
       h("div", { class: "lot__right" }, roomPanel(state, app, handlers)),
     ),
     phase === "bidding" || phase === "stealing" || phase === "answering"
-      ? h("div", { class: "dock" }, bidControl(app, handlers), phase === "answering" || (phase === "stealing" && app.stealStage) ? answerActions(app, handlers) : null)
+      ? h("div", { class: "dock" }, bidControl(app, handlers), (phase === "answering" || (phase === "stealing" && app.stealStage)) && roomAwaitingMe(app, phase) ? answerActions(app, handlers) : null)
       : null,
   );
 
@@ -573,7 +623,7 @@ export function lotScreen(app, handlers) {
 function answerActions(app, handlers) {
   const state = app.state;
   const phase = state.phase;
-  const choosing = phase === "answering" || (phase === "stealing" && app.stealStage);
+  const choosing = (phase === "answering" || (phase === "stealing" && app.stealStage)) && roomAwaitingMe(app, phase);
   if (!choosing) return null;
   const label = phase === "answering" ? "Lock in answer" : "Lock in the steal";
   return h(
@@ -592,7 +642,7 @@ function wire(app, handlers) {
 
   screen.addEventListener("keydown", (event) => {
     const phase = app.state.phase;
-    const choosing = phase === "answering" || (phase === "stealing" && app.stealStage);
+    const choosing = (phase === "answering" || (phase === "stealing" && app.stealStage)) && roomAwaitingMe(app, phase);
 
     if (event.key === " " || event.key === "Enter") handlers.onSkipSequence();
 
@@ -704,7 +754,8 @@ function startTicking(app, screen) {
   const frame = () => {
     if (!document.body.contains(bar)) return;
     const left = remainingMs(app.timer ? app.timer.startedAt : null);
-    bar.style.transform = `scaleX(${left / ANSWER_MS})`;
+    const dur = (app.timer && app.timer.duration) || ANSWER_MS;
+    bar.style.transform = `scaleX(${Math.min(1, left / dur)})`;
     const seconds = Math.ceil(left / 1000);
     if (seconds !== lastSecond) {
       count.textContent = String(seconds);
@@ -813,16 +864,38 @@ async function runReveal(app, screen, seq) {
 
 export function attachLotHelpers(app) {
   app.timeoutAnswer = () => {
-    if (!app.state || app.state.phase !== "answering") return;
-    app.dispatch({ type: "answer", index: null });
     app.timer = null;
+    if (!app.state) return;
+    if (app.roomClient && app.roomClient.phase === "playing") {
+      // the host's clock is the law; this only turns in a missing call for THIS device
+      if (app.state.phase !== "answering") return;
+      const awaiting = app.state.current && app.state.current.awaiting;
+      if (Array.isArray(awaiting) && !awaiting.includes("player")) return;
+      app.selection = null;
+      if (app.roomClient.isHost && app.roomHost) app.roomHost.noteAnswer("h-1", null);
+      else app.roomClient.publishAction({ t: "answer", index: null });
+      return;
+    }
+    if (app.state.phase !== "answering") return;
+    app.dispatch({ type: "answer", index: null });
     app.selection = null;
     app.render();
   };
   app.timeoutSteal = () => {
-    if (!app.state || app.state.phase !== "stealing") return;
-    app.dispatch({ type: "steal", index: null });
     app.timer = null;
+    if (!app.state) return;
+    if (app.roomClient && app.roomClient.phase === "playing") {
+      // bidding timeouts are the host's to enforce; only an awaited steal is ours
+      if (app.state.phase === "stealing" && app.stealForPlayer) {
+        app.stealStage = false;
+        app.selection = null;
+        if (app.roomClient.isHost && app.roomHost) app.roomHost.noteDecline("h-1");
+        else app.roomClient.publishAction({ t: "decline" });
+      }
+      return;
+    }
+    if (app.state.phase !== "stealing") return;
+    app.dispatch({ type: "decline" });
     app.selection = null;
     app.render();
   };
