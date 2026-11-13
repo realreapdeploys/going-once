@@ -42,7 +42,7 @@ function saleBounds(bank, isHammer) {
 
 export function createRoomSale(seed, { lotCount = 7, difficulty = "mixed", humans = ["Host"], botCount = 2 } = {}) {
   if (!seed || typeof seed !== "string") throw new Error("ROOM_SEED_REQUIRED");
-  const count = clamp(Math.floor(lotCount) || 7, 2, 12);
+  const count = clamp(Math.floor(lotCount) || 7, 2, 20);
   const rng = mulberry32(hashString(`going-once-room-game:${seed}`));
 
   const names = (humans.length ? humans : ["Host"]).map((n, i) => String(n || `Player ${i + 1}`).trim().slice(0, 24) || `Player ${i + 1}`);
