@@ -16,6 +16,8 @@ const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // no I, L, O, 0, 1
 const TOPIC_IN_SUFFIX = "in";   // clients -> host (and finish aggregation)
 const TOPIC_OUT_SUFFIX = "out"; // host -> everyone
 
+const clampBots = (n) => Math.max(0, Math.min(3, Math.floor(Number(n)) || 0));
+
 function randomId() {
   return `p-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -42,7 +44,7 @@ export class RoomClient {
     this.isHost = false;
     this.hostId = null;
     this.players = [];           // [{ id, name }]
-    this.settings = { lotCount: 7, difficulty: "mixed" };
+    this.settings = { lotCount: 7, difficulty: "mixed", botCount: 2 };
     this.phase = "lobby";        // lobby | playing | ended
     this.outcome = null;         // null | "disbanded" | "kicked"
     this.finishes = new Map();   // id -> { id, name, chips }
@@ -167,17 +169,40 @@ export class RoomClient {
     const next = { ...this.settings, ...patch };
     next.lotCount = Math.max(2, Math.min(12, Math.floor(Number(next.lotCount)) || 7));
     if (!["easy", "medium", "hard", "mixed"].includes(next.difficulty)) next.difficulty = "mixed";
+    next.botCount = clampBots(next.botCount);
     this.settings = next;
     this._broadcastLobby();
   }
 
-  start() {
+  beginSale({ seed, settings, seats }) {
     if (!this.isHost || this.phase !== "lobby") return;
     this.phase = "playing";
     this.startedAt = Date.now();
-    this.roomSeed = `${this.code}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-    this._send(TOPIC_OUT_SUFFIX, { t: "start", hostId: this.hostId, seed: this.roomSeed, settings: this.settings });
+    this.roomSeed = seed;
+    this.settings = settings;
+    this.seats = seats;
+    this.mySeat = (seats.find((s) => s.kind === "human" && s.playerId === this.myId) || seats[0]).id;
+    this.lastSnapshot = null;
+    this._send(TOPIC_OUT_SUFFIX, { t: "start", hostId: this.hostId, seed, settings, seats });
     this._broadcastLobby();
+    this.notify();
+  }
+
+  publishSnapshot({ seq, deadline, duration, pub }) {
+    if (!this.isHost) return;
+    this._send(TOPIC_OUT_SUFFIX, { t: "snapshot", hostId: this.hostId, from: this.hostId, seq, deadline, duration, pub });
+  }
+
+  publishAction(msg) {
+    this._send(TOPIC_IN_SUFFIX, { ...msg, t: msg.t, from: this.myId });
+  }
+
+  endRoom() {
+    if (!this.isHost) return;
+    this._send(TOPIC_OUT_SUFFIX, { t: "disband", hostId: this.hostId });
+    this.phase = "ended";
+    this.outcome = "disbanded";
+    this._teardown();
     this.notify();
   }
 
@@ -247,6 +272,16 @@ export class RoomClient {
       return;
     }
     const inTopic = topic.endsWith("/in");
+    if (inTopic && this.hostEngine && msg.t !== "hello" && msg.t !== "bye") {
+      this.hostEngine.handle(msg);
+      return;
+    }
+    if (!inTopic && msg.t === "snapshot" && !this.isHost) {
+      if (this.hostId && msg.hostId !== this.hostId) return;
+      this.lastSnapshot = msg;
+      this.notify();
+      return;
+    }
     if (inTopic && msg.t === "hello") {
       if (!this.isHost || this.phase !== "lobby") return;
       if (!this.players.some((p) => p.id === msg.id)) {
@@ -284,8 +319,10 @@ export class RoomClient {
       this.phase = "playing";
       this.roomSeed = msg.seed;
       this.settings = msg.settings || this.settings;
+      this.seats = msg.seats || [];
+      this.mySeat = (this.seats.find((s) => s.kind === "human" && s.playerId === this.myId) || {}).id || null;
       this.startedAt = Date.now();
-      this.finishes = new Map();
+      this.lastSnapshot = null;
       this.notify();
       return;
     }
