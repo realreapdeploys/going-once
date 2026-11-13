@@ -82,18 +82,31 @@ the same skills object.
 ## Private rooms
 
 The cover has a "Private room" button. One player hosts: they get a five-character room code,
-pick the number of questions in the sale (3, 5, 7 or 10) and the difficulty (a bit of everything /
-common / uncommon / rare), and can remove players or disband the room while it is still in the
-lobby. Anyone with the code and the link can join, whatever their network — school and office
-wifi included: the room rides a public MQTT relay over WebSocket (broker.emqx.io with
-test.mosquitto.org as a fallback), so no unusual ports and no accounts are involved.
+pick the number of questions in the sale (3, 5, 7 or 10), the difficulty (a bit of everything /
+common / uncommon / rare) and **how many bots fill the empty seats (0–3)**, and can remove players
+or disband the room while it is still in the lobby. Anyone with the code and the link can join,
+whatever their network — school and office wifi included: the room rides a public MQTT relay over
+WebSocket (broker.emqx.io with test.mosquitto.org as a fallback), so no unusual ports and no
+accounts are involved.
 
-How it actually works, honestly: the host's client is authoritative only for the lobby (settings,
-kick, disband, start). Every player plays the same seeded room sale **locally, against the bot
-rivals**, and their final chip total is published to the room when they finish. Everyone then sees
-a standings screen ranked by final chips. There is no shared game server, no anti-cheat, and chip
-totals are self-reported by each browser. Fine for a laugh with friends; not for money on the line.
-Rooms are ephemeral and nothing about them is stored.
+How it actually works, honestly: it is a genuinely shared sale, not separate parallel ones. The
+host's browser runs the auctioneer — the deterministic engine with the room seed — and every
+device at the table renders the same lots, bids and verdicts in real time. Guests send their
+paddles over the relay; the host clamps, validates, resolves and broadcasts. Nobody can skip
+ahead: answering order, the Hammer lot and the page turns belong to the room, and the host alone
+advances between lots. Bots play their own deterministic rolls inside the host's engine, so they
+never double-act or desync. Unbid lots pass automatically after the 45-second clock, unanswered
+lots are marked wrong after 20, and a steal is declined if the runner-up falls silent for 12 — a
+couch of phones will not stall the table. A bot winner resolves instantly on the host; at the
+Hammer everyone who wagered answers.
+
+Answers, bot rolls and other players' in-flight bids never leave the host's device: snapshots
+are stripped to what the room may see (bids stay sealed until the lot closes, `answerIndex` for
+the current lot is withheld until it resolves).
+
+There is no shared game server, no anti-cheat beyond the host's honesty, and a host who closes
+their tab ends the sale for everyone (guests simply fall back to the cover). Fine for a laugh
+with friends; not for money on the line. Rooms are ephemeral and nothing about them is stored.
 
 For anything real, run your own relay (a few lines of config on any machine with a TLS WebSocket
 frontend) or swap `src/room.js` for a WebSocket server of your own. The public brokers are free
