@@ -180,7 +180,7 @@ export function roomLobbyScreen(app, handlers) {
                 onchange: (e) => handlers.onSettings({ lotCount: Number(e.target.value) }),
               },
               (client.lotOptions ?? [3, 5, 7, 10, 12, 15, 20]).map((n) =>
-                h("option", { value: String(n), selected: client.settings.lotCount === n ? "" : null }, `${n} questions`),
+                h("option", { value: String(n), selected: client.settings.lotCount === n }, `${n} questions`),
               ),
             ),
           ),
@@ -200,7 +200,7 @@ export function roomLobbyScreen(app, handlers) {
                 ["medium", "Uncommon lots"],
                 ["hard", "Rare lots"],
               ].map(([value, label]) =>
-                h("option", { value, selected: client.settings.difficulty === value ? "" : null }, label),
+                h("option", { value, selected: client.settings.difficulty === value }, label),
               ),
             ),
           ),
@@ -217,7 +217,7 @@ export function roomLobbyScreen(app, handlers) {
               (client.botOptions ?? [0, 1, 2, 3, 4]).map((n) =>
                 h(
                   "option",
-                  { value: String(n), selected: (client.settings.botCount ?? 2) === n ? "" : null },
+                  { value: String(n), selected: (client.settings.botCount ?? 2) === n },
                   n === 0 ? "No bots — players only" : n === 1 ? "1 bot" : `${n} bots`,
                 ),
               ),
