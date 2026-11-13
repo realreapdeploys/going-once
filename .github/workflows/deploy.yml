@@ -27,6 +27,8 @@ jobs:
       - run: npm test
       - run: npm run validate:questions
       - run: npm run build
+        env:
+          VITE_ROOM_URL: ${{ vars.ROOM_URL }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
