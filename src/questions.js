@@ -3,7 +3,9 @@
 // Difficulty: 1 = Common, 2 = Uncommon, 3 = Rare.
 // All facts are stable (no records or figures that change year to year).
 
-export const CATEGORIES = ["Geography", "History", "Science", "Sport", "Film & TV", "Music"];
+export const CATEGORIES = ["Geography", "History", "Science", "Sport", "Film & TV", "Music", "Technology", "Arts & Literature"];
+
+import { EXTRA_QUESTIONS } from "./questions-extra.js";
 
 export const QUESTIONS = [
   // ---------- Geography ----------
@@ -88,5 +90,6 @@ export const QUESTIONS = [
   { id: "mus-3-1", category: "Music", difficulty: 3, question: "How many symphonies did Ludwig van Beethoven complete?", options: ["9", "5", "7", "12"], answerIndex: 0 },
   { id: "mus-3-2", category: "Music", difficulty: 3, question: "Which instrument did the jazz musician Miles Davis play?", options: ["Saxophone", "Piano", "Trombone", "Trumpet"], answerIndex: 3 },
   { id: "mus-3-3", category: "Music", difficulty: 3, question: "Which Italian musical term means gradually getting louder?", options: ["Diminuendo", "Crescendo", "Staccato", "Legato"], answerIndex: 1 },
-  { id: "mus-3-4", category: "Music", difficulty: 3, question: "Which composer wrote the opera The Magic Flute?", options: ["Giuseppe Verdi", "Giacomo Puccini", "Wolfgang Amadeus Mozart", "Richard Wagner"], answerIndex: 2 }
+  { id: "mus-3-4", category: "Music", difficulty: 3, question: "Which composer wrote the opera The Magic Flute?", options: ["Giuseppe Verdi", "Giacomo Puccini", "Wolfgang Amadeus Mozart", "Richard Wagner"], answerIndex: 2 },
+  ...EXTRA_QUESTIONS,
 ];
