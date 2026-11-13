@@ -186,19 +186,24 @@ export class SocketRoomClient {
     void this.updateSettings(partial);
   }
 
-  setSettings(partial) {
-    void this.updateSettings(partial);
-  }
-
   async updateSettings(partial) {
     const merged = { ...this.settings, ...(partial ?? {}) };
-    // clamp bots to what the seats can hold when the table is full
-    const humans = this.players.length || 1;
     // humans are the capped seats; bots are the host's extra company on top
     merged.botCount = Math.max(0, Math.min(Number(merged.botCount ?? 0), this.maxBots));
     this.settings = merged;
     this.notify();
-    await this._ack("lobby:update", { settings: merged });
+    try {
+      const response = await this._ack("lobby:update", { settings: merged });
+      if (response && response.ok === false && response.error) {
+        console.warn("[room] settings refused:", response.error);
+        this.error = response.error;
+        this.notify();
+      }
+    } catch (err) {
+      console.warn("[room] settings failed:", err.message);
+      this.error = err.message;
+      this.notify();
+    }
   }
 
   async startSale() {
