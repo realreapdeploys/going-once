@@ -6,7 +6,7 @@
 //
 // Chips: every bid, bank and payout is a multiple of STEP (5). Banks can never go below 0.
 //
-// Lot flow (lots 1 to 4):
+// Lot flow (lots 1 to 6):
 //   bidding   the player places a sealed bid (0 passes, at most half the bank: the house limit).
 //             Rivals' bids are computed from the day's seed and obey the same limit.
 //   answering the highest bid (at least STEP) wins the lot and must answer. The winner gains the bid if
@@ -16,7 +16,7 @@
 //             A steal pays the stealer's own bid plus half the failed winner's bid (rounded down to a
 //             multiple of STEP). A wrong steal costs the stealer's own bid.
 //   resolved  lot is finished, the record is in state.history. Dispatch "next".
-// Lot 5 is the Hammer: everyone must wager at least 25 percent of their bank (rounded up to STEP),
+// Lot 7 is the Hammer: everyone must wager at least 25 percent of their bank (rounded up to STEP),
 // then everyone answers the same question. Right gains the wager, wrong loses it. No steals.
 
 import { QUESTIONS, CATEGORIES } from "./questions.js";
@@ -24,14 +24,14 @@ import { ROSTER, getRivalById } from "./roster.js";
 
 export const ENGINE_VERSION = 1;
 export const START_CHIPS = 1000;
-export const LOT_COUNT = 5;
+export const LOT_COUNT = 7;
 export const STEP = 5;
 export const ANSWER_SECONDS = 20;
 export const HAMMER_MIN_FRACTION = 0.25;
 export const HOUSE_LIMIT_FRACTION = 0.5; // max bid as a fraction of the bank on lots 1 to 4
 export const RIVAL_COUNT = 3;
 export const LAUNCH_DATE = "2026-11-14"; // Sale No. 1
-export const DIFFICULTY_LADDER = Object.freeze([1, 2, 3, 2, 2]); // difficulty of lots 1 to 5
+export const DIFFICULTY_LADDER = Object.freeze([1, 2, 1, 2, 3, 2, 2]); // difficulty of lots 1 to 7
 export const DIFFICULTY_LABELS = Object.freeze({ 1: "Common", 2: "Uncommon", 3: "Rare" });
 
 export class EngineError extends Error {
@@ -129,7 +129,7 @@ export function hammerMinimum(bank) {
 }
 
 /**
- * House limit. On lots 1 to 4 no bid may exceed half the bank (rounded down to STEP, but a bank of
+ * House limit. On lots 1 to 6 no bid may exceed half the bank (rounded down to STEP, but a bank of
  * 5 to 9 chips may still bid STEP). The Hammer allows the whole bank.
  */
 export function maxBid(bank, isHammer) {
@@ -147,22 +147,23 @@ export function answerProbability(skill, difficulty) {
 
 /* ------------------------------------------------------------------ building a day */
 
-export function buildDay(dateStr, questions = QUESTIONS, roster = ROSTER) {
-  if (!isValidDateString(dateStr)) throw new EngineError("BAD_DATE", `Invalid date: ${dateStr}`);
-  const rng = mulberry32(hashString(`going-once:${dateStr}`));
-
+function buildDayInternal({ rng, dateLabel, saleNo, lotCount, difficultyLadder }, questions, roster) {
   const rivals = shuffled(roster.map((r) => r.id), rng).slice(0, RIVAL_COUNT);
-  const categories = shuffled(CATEGORIES, rng).slice(0, LOT_COUNT);
+  const categoryPool = [];
+  while (categoryPool.length < lotCount) {
+    categoryPool.push(...shuffled(CATEGORIES, rng));
+  }
+  const categories = categoryPool.slice(0, lotCount);
 
   const lots = categories.map((category, index) => {
-    const difficulty = DIFFICULTY_LADDER[index];
+    const difficulty = difficultyLadder[index];
     const pool = questions.filter((q) => q.category === category && q.difficulty === difficulty);
     if (pool.length === 0) throw new EngineError("NO_QUESTION", `No question for ${category} ${difficulty}`);
     const q = pool[Math.floor(rng() * pool.length)];
     const order = shuffled([0, 1, 2, 3], rng);
     return {
       index,
-      isHammer: index === LOT_COUNT - 1,
+      isHammer: index === lotCount - 1,
       questionId: q.id,
       category,
       difficulty,
@@ -174,7 +175,7 @@ export function buildDay(dateStr, questions = QUESTIONS, roster = ROSTER) {
 
   const bidders = ["player", ...rivals];
   const rolls = { knows: [], bluff: [], noise: [], pick: [], tieOrder: [] };
-  for (let l = 0; l < LOT_COUNT; l++) {
+  for (let l = 0; l < lotCount; l++) {
     const row = () => Object.fromEntries(rivals.map((id) => [id, rng()]));
     rolls.knows.push(row());
     rolls.bluff.push(row());
@@ -182,7 +183,65 @@ export function buildDay(dateStr, questions = QUESTIONS, roster = ROSTER) {
     rolls.pick.push(row());
     rolls.tieOrder.push(shuffled(bidders, rng));
   }
-  return { date: dateStr, saleNo: saleNumber(dateStr), rivals, lots, rolls };
+  return { date: dateLabel, saleNo, rivals, lots, rolls };
+}
+
+export function buildDay(dateStr, questions = QUESTIONS, roster = ROSTER) {
+  if (!isValidDateString(dateStr)) throw new EngineError("BAD_DATE", `Invalid date: ${dateStr}`);
+  const rng = mulberry32(hashString(`going-once:${dateStr}`));
+  return buildDayInternal(
+    { rng, dateLabel: dateStr, saleNo: saleNumber(dateStr), lotCount: LOT_COUNT, difficultyLadder: [...DIFFICULTY_LADDER] },
+    questions,
+    roster,
+  );
+}
+
+const ROOM_LADDER_CYCLE = Object.freeze([1, 2, 3, 2]);
+
+/** The ladder used for room sales when tension is set to "mixed". */
+export function mixedLadder(lotCount) {
+  const size = Math.max(1, Math.floor(lotCount) || 1);
+  return Array.from({ length: size }, (_, i) => (i === size - 1 ? 2 : ROOM_LADDER_CYCLE[i % ROOM_LADDER_CYCLE.length]));
+}
+
+/**
+ * A ladder of `lotCount` difficulties for a room sale.
+ * difficulty: "easy" | "medium" | "hard" | "mixed"
+ */
+export function roomLadder(lotCount, difficulty = "mixed") {
+  const size = Math.max(2, Math.min(12, Math.floor(lotCount) || 7));
+  const fill = difficulty === "easy" ? 1 : difficulty === "medium" ? 2 : difficulty === "hard" ? 3 : null;
+  return fill ? Array.from({ length: size }, () => fill) : mixedLadder(size);
+}
+
+export function createRoomGame(seed, { lotCount = 7, difficulty = "mixed" } = {}, questions = QUESTIONS, roster = ROSTER) {
+  if (!seed || typeof seed !== "string") throw new EngineError("BAD_SEED", "A room seed is required");
+  const count = Math.max(2, Math.min(12, Math.floor(lotCount) || 7));
+  const rng = mulberry32(hashString(`going-once-room:${seed}`));
+  const day = buildDayInternal(
+    {
+      rng,
+      dateLabel: `room:${seed}`,
+      saleNo: 9000 + (hashString(seed) % 1000),
+      lotCount: count,
+      difficultyLadder: roomLadder(count, difficulty),
+    },
+    questions,
+    roster,
+  );
+  const banks = { player: START_CHIPS };
+  for (const id of day.rivals) banks[id] = START_CHIPS;
+  return {
+    version: ENGINE_VERSION,
+    ...day,
+    banks,
+    lotIndex: 0,
+    phase: "bidding", // bidding | answering | stealing | resolved | finished
+    current: null,
+    history: [],
+    final: null,
+    room: { lotCount: count, difficulty },
+  };
 }
 
 export function createGame(dateStr, questions = QUESTIONS, roster = ROSTER) {
@@ -486,7 +545,7 @@ function doDecline(state) {
 
 function doNext(state) {
   assertPhase(state, "resolved");
-  if (state.lotIndex === LOT_COUNT - 1) {
+  if (state.lotIndex === state.lots.length - 1) {
     state.phase = "finished";
     state.final = standings(state);
   } else {
