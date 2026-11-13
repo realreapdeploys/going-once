@@ -52,6 +52,8 @@ import { paddle, paddleSvg } from "./paddle.js";
 import * as anim from "./anim.js";
 import * as sound from "./sound.js";
 import { RoomClient } from "../room.js";
+import { SocketRoomClient, SOCKET_ROOM_URL } from "../socket-room.js";
+const ROOM_SOCKET = Boolean(SOCKET_ROOM_URL);
 import { RoomHost } from "../room-host.js";
 import { povSnapshot, remapSnapshot, BID_MS, STEAL_MS } from "../room-game.js";
 import { roomSetupScreen, roomLobbyScreen, roomStandingsScreen } from "./room-screens.js";
@@ -167,6 +169,7 @@ export function startApp({ root, devDate = null } = {}) {
     if (!snap || client.phase !== "playing") {
       return; // the first snapshot arrives within a beat of the sale opening
     }
+    if (app.screen === "room-standings" || app.screen === "room-lobby") app.screen = "lot";
     app.roomMySeat = client.mySeat;
     const pov = remapSnapshot(snap.pub, client.mySeat || "nobody");
     syncRoomDerived(pov, snap.deadline, snap.duration);
@@ -510,6 +513,15 @@ export function startApp({ root, devDate = null } = {}) {
   function nextLot() {
     if (!app.state || app.state.phase !== "resolved") return;
     if (app.roomClient) {
+      if (app.roomClient.isSocket) {
+        sound.play("flick");
+        app.roomClient.publishAction({ t: "advance" });
+        app.selection = null;
+        app.revealDone = false;
+        app.timer = null;
+        app.roomLockedBid = null;
+        return; // the house relay turns the page
+      }
       if (!app.roomClient.isHost || !app.roomHost) return;
       sound.play("flick");
       app.roomHost.nextLot();
@@ -541,7 +553,7 @@ export function startApp({ root, devDate = null } = {}) {
 
   function ensureClient() {
     if (!app.roomClient) {
-      const client = new RoomClient();
+      const client = ROOM_SOCKET ? new SocketRoomClient() : new RoomClient();
       client.onUpdate = () => syncRoom();
       app.roomClient = client;
     }
@@ -552,7 +564,7 @@ export function startApp({ root, devDate = null } = {}) {
     const client = app.roomClient;
     if (!client) return;
     if (client.phase === "playing") {
-      if (client.isHost) return; // the host renders through roomHostUpdated
+      if (client.isHost && app.roomHost) return; // MQTT host path; over the relay everyone is a viewer
       roomGuestUpdated();
       return;
     }
@@ -580,8 +592,11 @@ export function startApp({ root, devDate = null } = {}) {
 
   function releaseRoom() {
     if (app.roomClient) {
-      if (app.roomClient.isHost && app.roomClient.phase === "playing") app.roomClient.endRoom();
-      else app.roomClient.leave();
+      const client = app.roomClient;
+      if (client.isSocket) {
+        if (client.isHost) client.disband(); else client.leave();
+      } else if (client.isHost && client.phase === "playing") client.endRoom();
+      else client.leave();
     }
     app.roomClient = null;
     app.roomHost = null;
@@ -694,6 +709,7 @@ export function startApp({ root, devDate = null } = {}) {
       onStart: () => {
         if (!client || client.phase !== "lobby") return;
         sound.unlock();
+        if (client.isSocket) { client.startSale().catch(() => {}); return; }
         const host = new RoomHost(client, { onUpdate: roomHostUpdated });
         client.hostEngine = host;
         app.roomHost = host;
@@ -706,7 +722,7 @@ export function startApp({ root, devDate = null } = {}) {
   }
 
   function roomStandingsView() {
-    return roomStandingsScreen(app, { onLeave: releaseRoom });
+    return roomStandingsScreen(app, { onLeave: releaseRoom, onPlayAgain: () => app.roomClient && typeof app.roomClient.playAgain === "function" && app.roomClient.playAgain().catch(() => {}) });
   }
 
     /* ---------------------------------------------------------------- results */
