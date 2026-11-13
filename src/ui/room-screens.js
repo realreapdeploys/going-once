@@ -344,7 +344,7 @@ export function roomStandingsScreen(app, handlers) {
       ? h(
           "button",
           { class: "btn btn--primary btn--big room__again", type: "button", onclick: handlers.onPlayAgain },
-          "Re-deal the table — same players",
+          "Play again",
         )
       : good && isSocketRoom
         ? h("p", { class: "room__ended-sub" }, "Waiting for the host to re-deal…")
