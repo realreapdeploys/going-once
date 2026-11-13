@@ -1,0 +1,1270 @@
+// Going Once: screen layout. Phone first, two columns from 720px, a pinned bid control on phones.
+
+/* ------------------------------------------------------------------ cover */
+
+.cover {
+  padding-top: 32px;
+}
+
+.cover__head {
+  text-align: center;
+  padding: 8px 0 4px;
+}
+
+.cover__kicker {
+  margin: 0 0 6px;
+  color: var(--oxblood-ink);
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: clamp(52px, 15vw, 104px);
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+  margin: 0 0 10px;
+}
+
+.cover__tagline {
+  font-size: clamp(15px, 4vw, 19px);
+  color: var(--ink-soft);
+  margin: 0 0 14px;
+}
+
+.cover__sale {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule);
+  display: inline-block;
+  min-width: min(100%, 340px);
+}
+
+.cover__cta {
+  text-align: center;
+  margin: 26px 0 6px;
+}
+
+.cover__next {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.cover__quiet {
+  text-align: center;
+  font-style: italic;
+  color: var(--ink-soft);
+  font-size: 14px;
+  margin-top: 18px;
+}
+
+.section-title {
+  text-align: center;
+  font-size: 26px;
+  font-style: italic;
+  margin: 4px 0 18px;
+}
+
+.rivals {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 720px) {
+  .rivals {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.rival {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+  border: 2px solid var(--ink);
+  background: var(--paper-2);
+  box-shadow: 3px 3px 0 var(--shadow);
+  position: relative;
+}
+
+.rival::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 1px solid var(--rule);
+  pointer-events: none;
+}
+
+.rival__portrait {
+  flex: none;
+  width: 78px;
+  height: 92px;
+  border: 1px solid var(--ink);
+  display: grid;
+  place-items: end center;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.rival__svg svg {
+  width: 100%;
+  height: auto;
+  color: var(--ink);
+}
+
+.rival__body {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.rival__surname {
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 1.05;
+  margin: 0;
+}
+
+.rival__name {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin: 2px 0 0;
+  letter-spacing: 0.02em;
+}
+
+.rival__title {
+  font-size: 14px;
+  margin: 1px 0 6px;
+  color: var(--ink-soft);
+}
+
+.rival__tagline {
+  font-size: 14px;
+  line-height: 1.42;
+  margin: 0 0 8px;
+}
+
+.rival__bank {
+  margin: 0 0 6px;
+}
+
+.ledger-row {
+  display: grid;
+  gap: 6px;
+  border-top: 1px solid var(--rule);
+  padding-top: 6px;
+}
+
+.ledger-row__item {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  font-size: 13px;
+  margin: 0;
+}
+
+.ledger-row__list {
+  color: var(--ink-soft);
+}
+
+.rival__tell {
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.cover__foot {
+  margin-top: 12px;
+}
+
+.footgrid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 720px) {
+  .footgrid {
+    grid-template-columns: 0.7fr 1.3fr 1fr;
+    align-items: start;
+  }
+}
+
+.footgrid__value {
+  font-size: 19px;
+  margin: 2px 0 0;
+}
+
+.footgrid__rep {
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.footgrid__hint {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin: 6px 0 0;
+}
+
+.footgrid__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.cover__fine {
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-soft);
+  letter-spacing: 0.06em;
+  margin-top: 24px;
+}
+
+/* ------------------------------------------------------------------ game header */
+
+.gamehead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 12px var(--gutter) 10px;
+  max-width: var(--sheet);
+  margin: 0 auto;
+  width: 100%;
+  border-bottom: 1px solid var(--rule);
+  flex-wrap: wrap;
+}
+
+.gamehead__left {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.gamehead__mark {
+  font-family: var(--font-display);
+  font-size: 22px;
+  margin: 0;
+  line-height: 1;
+}
+
+.gamehead__sale {
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+
+.gamehead__right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.purse {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  border: 1px solid var(--rule);
+}
+
+.purse__blot {
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--oxblood) 55%, transparent), transparent 68%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ lot layout */
+
+.lot {
+  padding-top: 18px;
+}
+
+.lot__grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 720px) {
+  .lot__grid {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.lot__left,
+.lot__right {
+  min-width: 0;
+}
+
+.lotplate {
+  position: relative;
+  border: 2px solid var(--ink);
+  background: var(--paper-2);
+  padding: 18px 18px 16px;
+  box-shadow: 3px 3px 0 var(--shadow);
+  min-height: 210px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.lotplate::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 1px solid var(--rule);
+  pointer-events: none;
+}
+
+.lotplate__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.lotplate__no {
+  font-family: var(--font-display);
+  margin: 0;
+  font-size: 20px;
+}
+
+.lotplate__num {
+  font-size: clamp(44px, 12vw, 72px);
+  line-height: 0.9;
+  font-family: var(--font-display);
+  font-style: italic;
+}
+
+.lotplate__cat {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin: 0;
+  text-align: right;
+}
+
+.lotplate__diff {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.dots {
+  display: inline-flex;
+  gap: 5px;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1px solid var(--ink);
+  display: inline-block;
+}
+
+.dot--on {
+  background: var(--ink);
+}
+
+.seal {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 8px 12px;
+  background: var(--paper);
+  border-top: 1px dashed var(--ink-soft);
+  border-bottom: 1px dashed var(--ink-soft);
+  transform: rotate(-0.6deg);
+  transition: clip-path 500ms var(--ease), opacity 400ms var(--ease);
+}
+
+.seal__text {
+  color: var(--oxblood-ink);
+  letter-spacing: 0.2em;
+  text-align: center;
+}
+
+.seal--torn {
+  clip-path: inset(0 100% 0 0);
+  opacity: 0;
+}
+
+.lotplate__note {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* ------------------------------------------------------------------ question */
+
+.qpanel {
+  margin-top: 16px;
+}
+
+.qpanel__question {
+  font-family: var(--font-body);
+  font-size: 19px;
+  line-height: 1.45;
+  margin: 0 0 12px;
+  overflow-wrap: anywhere;
+}
+
+.qpanel__hint {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin: 8px 0 0;
+}
+
+/* ------------------------------------------------------------------ timer */
+
+.timer {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.timer__bar {
+  flex: 1 1 auto;
+  height: 4px;
+  background: color-mix(in srgb, var(--rule) 60%, transparent);
+  border: 1px solid var(--rule);
+}
+
+.timer__fill {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+  transform-origin: left center;
+}
+
+.timer--urgent .timer__fill {
+  background: var(--oxblood);
+}
+
+.timer__count {
+  font-size: 14px;
+  min-width: 2ch;
+  text-align: right;
+}
+
+.lot[data-phase="answering"] .timer,
+.lot[data-phase="stealing"] .timer {
+  display: flex;
+}
+
+/* ------------------------------------------------------------------ room */
+
+.room__title {
+  margin: 0 0 10px;
+}
+
+.room__cards {
+  display: grid;
+  gap: 12px;
+}
+
+.room .rival {
+  padding: 12px;
+}
+
+@media (max-width: 719px) {
+  .room {
+    margin-top: 6px;
+  }
+  .room__cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .room .rival {
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+  }
+  .room .rival__portrait {
+    width: 100%;
+    height: 62px;
+  }
+  .room .rival__surname {
+    font-size: 16px;
+    text-align: center;
+  }
+  .room .rival__bank .chip__value {
+    font-size: 13px;
+  }
+  .room .rival__bank {
+    margin: 0;
+    justify-content: center;
+    display: flex;
+  }
+  .room .rival__body > *:not(.rival__surname):not(.rival__bank) {
+    display: none;
+  }
+  .room .rival__tell {
+    display: block;
+    font-size: 12px;
+    margin-top: 2px;
+    border-left: 0;
+    padding-left: 0;
+  }
+}
+
+/* Rival bid flip card */
+.flip {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: rotateY(0deg);
+  background: var(--ink);
+  color: var(--paper);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+  border: 2px solid var(--ink);
+}
+
+.flip--top {
+  border-bottom: 4px solid var(--brass);
+}
+
+/* ------------------------------------------------------------------ auctioneer line */
+
+.auctioneer {
+  min-height: 30px;
+  margin: 12px 0 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 22px;
+  color: var(--ink-soft);
+}
+
+/* ------------------------------------------------------------------ bid control */
+
+.dock {
+  margin-top: 20px;
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  background: var(--paper);
+  border-top: 1px solid var(--rule);
+  padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 720px) {
+  .dock {
+    position: static;
+    border-top: 0;
+    padding: 0;
+    margin-top: 22px;
+  }
+}
+
+.bidcontrol {
+  border: 2px solid var(--ink);
+  background: var(--paper-2);
+  padding: 14px;
+  box-shadow: 3px 3px 0 var(--shadow);
+  position: relative;
+}
+
+.bidcontrol::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 1px solid var(--rule);
+  pointer-events: none;
+}
+
+.bidcontrol__row {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.paddle--control {
+  flex: none;
+  width: 74px;
+}
+
+.paddle--control .paddle__art {
+  width: 100%;
+  height: auto;
+}
+
+.bidcontrol__fields {
+  flex: 1 1 190px;
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.bidcontrol__numrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bidcontrol__numrow .field {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.quickpicks {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.quickpick {
+  border: 1px solid var(--rule);
+  padding: 7px 9px;
+  min-height: 36px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  background: var(--paper);
+}
+
+.quickpick:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.quickpick--on {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+.bidcontrol__hint {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin: 10px 0 10px;
+  font-style: italic;
+}
+
+.bidcontrol__empty {
+  margin: 8px 0 12px;
+  font-style: italic;
+}
+
+.answerbar {
+  margin-top: 12px;
+}
+
+/* ------------------------------------------------------------------ steal panel */
+
+.steal {
+  margin-top: 16px;
+}
+
+.steal__head {
+  font-size: 24px;
+  margin: 4px 0 8px;
+}
+
+.steal__line {
+  font-size: 16px;
+  margin: 0 0 6px;
+}
+
+.steal__terms {
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin: 0 0 14px;
+}
+
+.steal__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ------------------------------------------------------------------ lot ledger + review */
+
+.lotledger {
+  margin-top: 18px;
+  overflow-x: auto;
+}
+
+.lotledger__title {
+  font-size: 20px;
+  font-style: italic;
+  margin: 0;
+}
+
+.ledger tr.row--you th,
+.ledger tr.row--you td {
+  font-weight: 700;
+}
+
+.review {
+  margin-top: 14px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+}
+
+.review__summary {
+  padding: 12px 14px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.review__body {
+  padding: 0 14px 14px;
+}
+
+.review__question {
+  font-size: 16px;
+  margin: 0 0 8px;
+}
+
+.review__options {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+}
+
+.review__option {
+  display: flex;
+  gap: 8px;
+  font-size: 15px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.review__option--right {
+  font-weight: 700;
+}
+
+.review__tag {
+  color: var(--brass-text);
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.review__key {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.review__picks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.review__who {
+  color: var(--ink);
+}
+
+/* ------------------------------------------------------------------ results */
+
+.results {
+  padding-top: 28px;
+}
+
+.results__head {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.results__title {
+  font-size: clamp(34px, 9vw, 54px);
+  font-style: italic;
+  margin: 6px 0 6px;
+}
+
+.results__sub {
+  color: var(--ink-soft);
+  font-size: 16px;
+}
+
+.results__grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 720px) {
+  .results__grid {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.standings {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.standing td {
+  padding: 10px 6px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: middle;
+}
+
+.standing__rank {
+  width: 42px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.standing--you .standing__rank {
+  color: var(--ink);
+}
+
+.standing--you td {
+  border-bottom: 2px solid var(--brass);
+}
+
+.standing__who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.standing__portrait {
+  width: 34px;
+  height: 40px;
+  border: 1px solid var(--ink);
+  overflow: hidden;
+  display: grid;
+  place-items: end center;
+  flex: none;
+}
+
+.standing__portrait svg {
+  width: 100%;
+  height: auto;
+}
+
+.standing__paddle {
+  width: 24px;
+  flex: none;
+}
+
+.standing__paddle svg {
+  width: 100%;
+  height: auto;
+}
+
+.standing__name {
+  font-family: var(--font-display);
+  font-size: 20px;
+}
+
+.standing__stamp {
+  margin-left: 4px;
+}
+
+.standing__chips {
+  text-align: right;
+}
+
+.reputation__big {
+  font-size: 40px;
+  margin: 6px 0 10px;
+  font-family: var(--font-display);
+}
+
+.reputation__value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--brass-text);
+}
+
+.reputation__of {
+  font-size: 16px;
+  color: var(--ink-soft);
+  font-family: var(--font-body);
+}
+
+.reputation__hint,
+.reputation__streak {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin: 8px 0 0;
+}
+
+.reputation__promo {
+  margin: 12px 0 0;
+}
+
+.reputation__paddles {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.newpaddle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.newpaddle__art {
+  width: 34px;
+  flex: none;
+}
+
+.newpaddle__art svg {
+  width: 100%;
+  height: auto;
+}
+
+.newpaddle__text {
+  font-size: 14px;
+  margin: 0;
+}
+
+.lots {
+  margin-top: 18px;
+  overflow-x: auto;
+}
+
+.lotrow td {
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 15px;
+}
+
+.lotrow__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  min-height: 34px;
+  border: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.lotrow__toggle[aria-expanded="true"] {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+.lotrow__outcome {
+  font-size: 16px;
+  text-align: center;
+}
+
+.glyph--won,
+.glyph--stole {
+  color: var(--brass-text);
+}
+
+.glyph--lost {
+  color: var(--oxblood-ink);
+}
+
+.glyph--pass {
+  color: var(--ink-soft);
+}
+
+.lotrow__detail td {
+  background: var(--paper-2);
+  padding: 12px;
+}
+
+.lotdetail__q {
+  font-size: 15px;
+  margin: 0 0 6px;
+}
+
+.lotdetail__a {
+  font-size: 15px;
+  margin: 0 0 8px;
+}
+
+.lotdetail__rivals {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.lotdetail__who {
+  color: var(--ink);
+}
+
+.results__foot {
+  margin-top: 22px;
+}
+
+.share {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+
+.share__next {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.share__fallback {
+  width: 100%;
+}
+
+.share__box {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  padding: 10px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  resize: vertical;
+}
+
+.results__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.newsale {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.newsale__text {
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 20px;
+}
+
+/* ------------------------------------------------------------------ modals */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: color-mix(in srgb, var(--ink) 55%, transparent);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.modal {
+  width: 100%;
+  max-width: 620px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  background: var(--paper);
+}
+
+.modal__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+}
+
+.modal__title {
+  font-size: 30px;
+  font-style: italic;
+}
+
+.modal__close {
+  font-size: 26px;
+  line-height: 1;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--rule);
+  color: var(--ink-soft);
+}
+
+.modal__close:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.howto__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: none;
+}
+
+.howto__step {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: 4px 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.howto__num {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 22px;
+  color: var(--brass-text);
+  grid-row: span 2;
+}
+
+.howto__head {
+  font-size: 19px;
+  font-family: var(--font-display);
+}
+
+.howto__text {
+  font-size: 15px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.howto__example {
+  margin-top: 16px;
+}
+
+.howto__example-text {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.howto__list {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.howto__list li {
+  margin-bottom: 4px;
+}
+
+.ledger-modal__title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-style: italic;
+  margin: 2px 0 8px;
+}
+
+.ledger-modal__hint,
+.ledger-modal__empty {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin: 8px 0 0;
+}
+
+.ledger-modal__head {
+  font-size: 18px;
+  font-style: italic;
+  margin: 20px 0 10px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 4px;
+}
+
+.paddles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+
+.paddlechoice {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border: 1px solid var(--rule);
+  background: var(--paper-2);
+  min-height: 44px;
+  text-align: center;
+}
+
+.paddlechoice:hover {
+  border-color: var(--ink);
+}
+
+.paddlechoice--on {
+  border-color: var(--ink);
+  border-width: 2px;
+  box-shadow: 2px 2px 0 var(--shadow);
+}
+
+.paddlechoice--locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.6);
+}
+
+.paddlechoice__art svg {
+  width: 100%;
+  height: auto;
+}
+
+.paddlechoice__art {
+  width: 40px;
+}
+
+.paddlechoice__name {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.paddlechoice__lock {
+  font-size: 10px;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.ledger-modal__date {
+  font-weight: 400;
+  text-align: left;
+}
+
+.confirm__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.lot__next {
+  margin-top: 18px;
+}
