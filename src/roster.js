@@ -141,8 +141,35 @@ export const ROSTER = Object.freeze([
   }
 ]);
 
+// Room guests and hosts: humans at the table get pseudo-rival entries so every
+// card, ledger and panel can render them the same as the saleroom's fixtures.
+const ROOM_SEAT_REGISTRY = new Map();
+
+const ROOM_SKILLS = { "Geography": 0.5, "History": 0.5, "Science": 0.5, "Sport": 0.5, "Film & TV": 0.5, "Music": 0.5, "Technology": 0.5, "Arts & Literature": 0.5 };
+
+export function registerRoomSeats(seats) {
+  ROOM_SEAT_REGISTRY.clear();
+  if (!Array.isArray(seats)) return;
+  let donorIndex = 1;
+  for (const seat of seats) {
+    if (seat.kind !== "human") continue;
+    const donor = ROSTER[donorIndex % ROSTER.length];
+    donorIndex += 2;
+    ROOM_SEAT_REGISTRY.set(seat.id, {
+      id: seat.id,
+      name: seat.name,
+      title: "At the table",
+      tagline: "A guest at your table.",
+      boldness: 0.5,
+      bluff: 0.1,
+      skills: { ...ROOM_SKILLS },
+      portrait: donor.portrait,
+    });
+  }
+}
+
 export function getRivalById(id) {
-  return ROSTER.find((r) => r.id === id) || null;
+  return ROOM_SEAT_REGISTRY.get(id) || ROSTER.find((r) => r.id === id) || null;
 }
 
 // Strong = skill of 0.75 or more, weak = skill of 0.4 or less. Used for the "ledger" chips on rival cards.
