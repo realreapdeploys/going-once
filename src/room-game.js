@@ -6,6 +6,12 @@
 
 import { QUESTIONS, CATEGORIES } from "./questions.js";
 import { ROSTER, getRivalById } from "./roster.js";
+
+// Tuning hook: measure the bots against alternative personality sets without touching the roster.
+let TUNE_ROSTER = null;
+export function __setTuneRoster(list) { TUNE_ROSTER = Array.isArray(list) ? list : null; }
+const rosterList = () => TUNE_ROSTER ?? ROSTER;
+const rivalById = (id) => rosterList().find((r) => r.id === id) || getRivalById(id);
 import {
   STEP,
   START_CHIPS,
@@ -36,6 +42,9 @@ export const BID_MS = 45000;
 export const STEAL_MS = 12000;
 export const ANSWER_MS = ANSWER_MS_FALLBACK;
 
+const LARGE_LOT_VALUE = 400; // chips a winning bid pays back when the answer is right: the most a lot is worth
+const BOT_SKILL = 0.85; // bots are sensible bidders, not walking encyclopedias
+
 function saleBounds(bank, isHammer) {
   return { min: isHammer ? hammerMinimum(bank) : 0, max: maxBid(bank, isHammer), step: STEP };
 }
@@ -46,7 +55,7 @@ export function createRoomSale(seed, { lotCount = 7, difficulty = "mixed", human
   const rng = mulberry32(hashString(`going-once-room-game:${seed}`));
 
   const names = (humans.length ? humans : ["Host"]).map((n, i) => String(n || `Player ${i + 1}`).trim().slice(0, 24) || `Player ${i + 1}`);
-  const rosterIds = ROSTER.map((r) => r.id);
+  const rosterIds = rosterList().map((r) => r.id);
   const botIds = shuffled(rosterIds, rng).slice(0, clamp(Math.floor(botCount) || 0, 0, 3));
   const seats = [
     ...names.map((name, i) => ({ id: `h-${i + 1}`, kind: "human", seatNumber: i + 1, name, playerId: null })),
@@ -70,6 +79,7 @@ export function createRoomSale(seed, { lotCount = 7, difficulty = "mixed", human
       question: q.question,
       options: order.map((i) => q.options[i]),
       answerIndex: order.indexOf(q.answerIndex),
+      value: LARGE_LOT_VALUE, // chips: what a winning bid pays back when the answer is right
     };
   });
 
@@ -115,27 +125,70 @@ export function bidBoundsFor(state, seat) {
   return saleBounds(state.banks[seat], state.lots[state.lotIndex].isHammer);
 }
 
+/**
+ * A bot's bid is a share of what the lot is WORTH to it, not a share of its bank.
+ *
+ * A lot pays back exactly what you bid when you know it and costs you exactly what you bid
+ * when you don't, so the most a lot can be worth is its answer price. A bot bids a slice of that
+ * price, sized by its chance of knowing the answer and its personality, and capped by its purse.
+ *
+ * It used to bid a share of the BANK instead, which meant a bot sitting on 1,200 chips outbid a
+ * player on 1,000 on every lot regardless of what either of them knew — and a bot that got rich
+ * early stayed rich, so one hot streak decided the whole sale.
+ */
+function parChance(difficulty) {
+  const cats = rosterList()[0] ? Object.keys(rosterList()[0].skills) : [];
+  if (!cats.length) return 0.5;
+  const avg = cats.reduce((sum, c) => sum + rosterList().reduce((a, r) => a + r.skills[c], 0) / rosterList().length, 0) / cats.length;
+  return answerProbability(avg, difficulty);
+}
+
 function botBid(state, lotIndex, id) {
   const bank = state.banks[id];
   if (bank < STEP) return 0;
   const lot = state.lots[lotIndex];
-  const bot = getRivalById(state.seatIndex[id].botId);
-  const p = answerProbability(bot.skills[lot.category], lot.difficulty);
+  const bot = rivalById(state.seatIndex[id].botId);
+  const p = botChance(bot, lot);
   const bluffing = state.rolls.bluff[lotIndex][id] < bot.bluff;
   const noise = state.rolls.noise[lotIndex][id];
-  const perceived = clamp(p + (bluffing ? 0.35 : 0) + (noise - 0.5) * 0.2, 0, 1);
-  const base = clamp((perceived - 0.3) / 0.7, 0, 1);
-  const fraction = base * (0.2 + 0.7 * bot.boldness);
-  let bid = floorTo(bank * fraction, STEP);
+  // A bot bids on what it believes it knows, never on the answer: rolling `botKnows` here let a
+  // bot win exactly the lots it was going to get right and sit out the rest, which is cheating.
+  const perceived = clamp(p + (bluffing ? 0.1 : 0) + (noise - 0.5) * 0.14, 0, 1);
+  const par = parChance(lot.difficulty);
+  // how sure it feels relative to an average rival at this difficulty: its edge
+  const edge = clamp((perceived - par) / 0.4, -1, 1);
+  const bold = 0.4 + bot.boldness; // 0.4 ... 1.4
+  const share = clamp(0.16 + 0.42 * perceived + edge * 0.2 * bold + (noise - 0.5) * 0.1, 0.1, 1.0);
+  let bid = floorTo(lotValue(lot) * share, STEP);
   bid = Math.min(bid, maxBid(bank, lot.isHammer));
   if (lot.isHammer) bid = clamp(bid, hammerMinimum(bank), bank);
   return bid;
 }
 
+/** What a lot is worth to someone who knows the answer: the whole stake comes back. */
+function lotValue(lot) {
+  const v = Number(lot?.value);
+  if (Number.isFinite(v) && v > 0) return v;
+  return START_CHIPS / 4; // a quarter of the opening purse
+}
+
+/**
+ * Chance a bot knows a lot: its own category skill, held near the middle of the table.
+ *
+ * The roster's raw skills run from 0.25 to 0.9, which made a bot with a favourite category
+ * unbeatable on it and useless on everything else. Pulling them toward 0.5 keeps the personality
+ * (still better on its subjects than on its weak ones) without the runaway specialist.
+ */
+function botChance(bot, lot) {
+  const raw = bot.skills[lot.category] ?? 0.5;
+  const skill = 0.5 + (raw - 0.5) * BOT_SKILL;
+  return answerProbability(skill, lot.difficulty);
+}
+
+/** Whether a bot at this seat knows this lot's answer. */
 function botKnows(state, lotIndex, id) {
-  const bot = getRivalById(state.seatIndex[id].botId);
-  const lot = state.lots[lotIndex];
-  return state.rolls.knows[lotIndex][id] < answerProbability(bot.skills[lot.category], lot.difficulty);
+  const bot = rivalById(state.seatIndex[id].botId);
+  return state.rolls.knows[lotIndex][id] < botChance(bot, state.lots[lotIndex]);
 }
 
 function botWrongPick(state, lotIndex, id, exclude = null) {
