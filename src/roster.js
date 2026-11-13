@@ -27,7 +27,7 @@ export const ROSTER = Object.freeze([
     tagline: "Has been everywhere and remembers all of it. Bids when she is sure.",
     boldness: 0.5,
     bluff: 0.1,
-    skills: { "Geography": 0.9, "History": 0.6, "Science": 0.8, "Sport": 0.5, "Film & TV": 0.35, "Music": 0.3 },
+    skills: { "Geography": 0.9, "History": 0.6, "Science": 0.8, "Sport": 0.5, "Film & TV": 0.35, "Music": 0.3, "Technology": 0.35, "Arts & Literature": 0.4 },
     portrait: `${BUST}
       <circle cx="50" cy="68" r="2" fill="currentColor" stroke="none"/>
       <circle cx="70" cy="68" r="2" fill="currentColor" stroke="none"/>
@@ -47,7 +47,7 @@ export const ROSTER = Object.freeze([
     tagline: "Bids big on anything. Half of it is theatre.",
     boldness: 0.95,
     bluff: 0.5,
-    skills: { "Geography": 0.5, "History": 0.4, "Science": 0.4, "Sport": 0.85, "Film & TV": 0.55, "Music": 0.5 },
+    skills: { "Geography": 0.5, "History": 0.4, "Science": 0.4, "Sport": 0.85, "Film & TV": 0.55, "Music": 0.5, "Technology": 0.5, "Arts & Literature": 0.45 },
     portrait: `${BUST}
       <circle cx="50" cy="68" r="2" fill="currentColor" stroke="none"/>
       <circle cx="70" cy="68" r="2" fill="currentColor" stroke="none"/>
@@ -66,7 +66,7 @@ export const ROSTER = Object.freeze([
     tagline: "Slow, careful and rarely wrong. Hates to lose chips.",
     boldness: 0.2,
     bluff: 0.05,
-    skills: { "Geography": 0.65, "History": 0.9, "Science": 0.85, "Sport": 0.3, "Film & TV": 0.4, "Music": 0.55 },
+    skills: { "Geography": 0.65, "History": 0.9, "Science": 0.85, "Sport": 0.3, "Film & TV": 0.4, "Music": 0.55, "Technology": 0.6, "Arts & Literature": 0.85 },
     portrait: `${BUST}
       <circle cx="50" cy="68" r="2" fill="currentColor" stroke="none"/>
       <circle cx="70" cy="68" r="2" fill="currentColor" stroke="none"/>
@@ -86,7 +86,7 @@ export const ROSTER = Object.freeze([
     tagline: "Talks the whole time. Knows sport and screens, bluffs on the rest.",
     boldness: 0.7,
     bluff: 0.3,
-    skills: { "Geography": 0.5, "History": 0.35, "Science": 0.4, "Sport": 0.9, "Film & TV": 0.8, "Music": 0.55 },
+    skills: { "Geography": 0.5, "History": 0.35, "Science": 0.4, "Sport": 0.9, "Film & TV": 0.8, "Music": 0.55, "Technology": 0.45, "Arts & Literature": 0.6 },
     portrait: `${BUST}
       <circle cx="50" cy="68" r="2" fill="currentColor" stroke="none"/>
       <circle cx="70" cy="68" r="2" fill="currentColor" stroke="none"/>
@@ -107,7 +107,7 @@ export const ROSTER = Object.freeze([
     tagline: "Buys with her ears. Strong on music and the past, lost on science.",
     boldness: 0.6,
     bluff: 0.35,
-    skills: { "Geography": 0.55, "History": 0.8, "Science": 0.3, "Sport": 0.25, "Film & TV": 0.75, "Music": 0.9 },
+    skills: { "Geography": 0.55, "History": 0.8, "Science": 0.3, "Sport": 0.25, "Film & TV": 0.75, "Music": 0.9, "Technology": 0.55, "Arts & Literature": 0.9 },
     portrait: `${BUST}
       <circle cx="50" cy="68" r="2" fill="currentColor" stroke="none"/>
       <circle cx="70" cy="68" r="2" fill="currentColor" stroke="none"/>
@@ -127,7 +127,7 @@ export const ROSTER = Object.freeze([
     tagline: "Knows a little of everything. Never bids more than he can afford to lose.",
     boldness: 0.1,
     bluff: 0,
-    skills: { "Geography": 0.6, "History": 0.6, "Science": 0.6, "Sport": 0.55, "Film & TV": 0.55, "Music": 0.55 },
+    skills: { "Geography": 0.6, "History": 0.6, "Science": 0.6, "Sport": 0.55, "Film & TV": 0.55, "Music": 0.55, "Technology": 0.6, "Arts & Literature": 0.6 },
     portrait: `${BUST}
       <circle cx="50" cy="68" r="2" fill="currentColor" stroke="none"/>
       <circle cx="70" cy="68" r="2" fill="currentColor" stroke="none"/>
