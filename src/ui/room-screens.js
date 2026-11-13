@@ -226,7 +226,7 @@ export function roomLobbyScreen(app, handlers) {
           h(
             "p",
             { class: "room__table-line" },
-            `At the table: ${client.players.length} ${client.players.length === 1 ? "player" : "players"} + ${client.settings.botCount ?? 2} ${(client.settings.botCount ?? 2) === 1 ? "bot" : "bots"} — the saleroom seats up to ${client.maxSeats ?? 10}.`,
+            `At the table: ${client.players.length} of ${client.maxSeats ?? 10} seats taken${Number(client.settings.botCount ?? 0) > 0 ? `, plus ${client.settings.botCount} ${client.settings.botCount === 1 ? "bot" : "bots"}` : ""}.`,
           ),
           h(
             "button",
