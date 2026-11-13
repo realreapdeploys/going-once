@@ -716,6 +716,11 @@ export function startApp({ root, devDate = null } = {}) {
         host.start(); // broadcasts the sale; roomHostUpdated takes over rendering
       },
       onSettings: (patch) => client && client.setSettings(patch),
+      onRefusal: (message) => {
+        // the house said no (a stale tap, a closed phase): tell the player, then re-sync from the next snapshot
+        if (app.roomClient) app.roomClient.error = message;
+        render();
+      },
       onCopyCode: copyRoomCode,
       onLeave: releaseRoom,
     });
