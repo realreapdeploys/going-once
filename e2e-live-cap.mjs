@@ -30,7 +30,7 @@ await lotSel.selectOption("20");
 await sleep(1500);
 const lotAfter = await lotSel.inputValue();
 console.log("· 20-question sale selected in the UI:", lotAfter === "20");
-const capCopy = await host.evaluate(() => document.body.innerText.match(/up to \d+ (players|seats)[^.]*/i)?.[0] ?? "not found");
+const capCopy = await host.evaluate(() => document.body.innerText.match(/At the table:[^\n]*/i)?.[0] ?? "not found");
 console.log("· seat copy:", capCopy);
 const pages = [];
 for (let i = 2; i <= 11; i++) {
@@ -46,7 +46,8 @@ for (let i = 2; i <= 11; i++) {
 }
 const seated = pages.filter((x) => x.joined).length + 1;
 const refusedCount = pages.filter((x) => !x.joined).length;
+const expectedRefusals = pages.length - (10 - 1);
 console.log("· total seated:", seated, "(host + guests)");
-console.log("· refused:", refusedCount, "| expected refusals:", 11 - 10);
-console.log(seated === 10 && refusedCount === 2 ? "SEAT CAP PASS" : "SEAT CAP CHECK FAILED");
+console.log("· refused:", refusedCount, "| expected refusals:", expectedRefusals);
+console.log(seated === 10 && refusedCount === expectedRefusals ? "SEAT CAP PASS" : "SEAT CAP CHECK FAILED");
 await browser.close();
