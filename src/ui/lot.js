@@ -585,7 +585,7 @@ export function lotScreen(app, handlers) {
         phase === "resolved" ? ledgerPanel(state, app) : null,
         phase === "resolved" ? lotReview(state, app, handlers) : null,
         phase === "resolved"
-          ? app.roomClient && !app.roomClient.isHost
+          ? app.roomClient && !app.roomClient.isHost && !app.roomClient.isSocket
             ? h(
                 "div",
                 { class: "lot__next" },
