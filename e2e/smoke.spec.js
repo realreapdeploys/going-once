@@ -35,7 +35,7 @@ async function closeIntroIfOpen(page) {
  * Handles the three ways a lot can end for the player: answering, stealing or waiting.
  */
 async function playSale(page) {
-  for (let lot = 0; lot < 5; lot += 1) {
+  for (let lot = 0; lot < 7; lot += 1) {
     // Bidding phase (or we are already past it).
     const confirm = page.locator("[data-confirm]");
     await confirm.waitFor({ state: "visible", timeout: 15000 }).catch(() => {});
