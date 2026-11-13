@@ -63,7 +63,7 @@ Questions live in `src/questions.js`. Each one:
 ```
 
 - `id`: unique, convention `<cat>-<difficulty>-<n>`; never reuse an id.
-- `category`: one of the six in `CATEGORIES` (Geography, History, Science, Sport, Film & TV, Music).
+- `category`: one of the nine in `CATEGORIES` (Geography, History, Science, Sport, Film & TV, Music, Technology, Arts & Literature, Video Games & Streaming).
 - `difficulty`: `1` Common, `2` Uncommon, `3` Rare. Every category x difficulty cell must keep at
   least 4 questions.
 - `question`: 140 characters or fewer, no duplicate text across the bank.
@@ -180,7 +180,7 @@ engine, listed for honesty):
 - The room race gives everyone the same lots but not a shared table: you never see each other's
   bids or answers live. Real-time shared-turn play would need a game server.
 - 
-- The bank is ~1,000 questions across 8 categories x 3 difficulties, and it was written by a machine.
+- The bank is ~1,280 questions across 9 categories x 3 difficulties (built-in classics, the extra bank and the modern pack), and it was written by a machine.
   Most facts are high-confidence but the bank has not had a full human fact-check — treat it as a
   good draft, not gospel, and verify anything you hear quoted in a pub argument.
 - No accounts, leaderboards or sync: progress is per device, per browser.
