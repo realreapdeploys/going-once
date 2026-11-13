@@ -141,7 +141,7 @@ log("standings rows:", rows1, "/", rows2);
 if (rows1 !== 2 || rows2 !== 2) fail("standings incomplete");
 
 // --- host re-deals; both tables return to lot 0
-const reDeal = page1.locator("button:has-text('Re-deal the table')");
+const reDeal = page1.locator("button:has-text('Play again')");
 await reDeal.waitFor({ state: "visible", timeout: 10000 });
 await reDeal.click();
 await page1.waitForSelector("[data-lotplate]", { timeout: 15000 });
