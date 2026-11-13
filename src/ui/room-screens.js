@@ -115,7 +115,7 @@ export function roomSetupScreen(app, handlers) {
     h(
       "p",
       { class: "room__fine" },
-      "One sale, played together on every phone at the table — shared lots, shared bids, the host keeps the books. Names only, no accounts.",
+      "One sale, played together on every phone at the table — shared lots, shared bids, the house keeps the books. Names only, no accounts, up to ten seats.",
     ),
   );
   return { body };
@@ -179,7 +179,7 @@ export function roomLobbyScreen(app, handlers) {
                 class: "room__select",
                 onchange: (e) => handlers.onSettings({ lotCount: Number(e.target.value) }),
               },
-              [3, 5, 7, 10].map((n) =>
+              (client.lotOptions ?? [3, 5, 7, 10, 12, 15, 20]).map((n) =>
                 h("option", { value: String(n), selected: client.settings.lotCount === n ? "" : null }, `${n} questions`),
               ),
             ),
@@ -214,7 +214,7 @@ export function roomLobbyScreen(app, handlers) {
                 class: "room__select",
                 onchange: (e) => handlers.onSettings({ botCount: Number(e.target.value) }),
               },
-              [0, 1, 2, 3].map((n) =>
+              (client.botOptions ?? [0, 1, 2, 3, 4]).map((n) =>
                 h(
                   "option",
                   { value: String(n), selected: (client.settings.botCount ?? 2) === n ? "" : null },
@@ -226,7 +226,7 @@ export function roomLobbyScreen(app, handlers) {
           h(
             "p",
             { class: "room__table-line" },
-            `At the table: ${client.players.length} ${client.players.length === 1 ? "player" : "players"} + ${client.settings.botCount ?? 2} ${(client.settings.botCount ?? 2) === 1 ? "bot" : "bots"} — the saleroom seats ${client.players.length + (client.settings.botCount ?? 2)}.`,
+            `At the table: ${client.players.length} ${client.players.length === 1 ? "player" : "players"} + ${client.settings.botCount ?? 2} ${(client.settings.botCount ?? 2) === 1 ? "bot" : "bots"} — the saleroom seats up to ${client.maxSeats ?? 10}.`,
           ),
           h(
             "button",
@@ -338,6 +338,17 @@ export function roomStandingsScreen(app, handlers) {
   }
 
   const good = Boolean(finalRows && finalRows.length);
+  const isSocketRoom = Boolean(client.isSocket);
+  const playAgainBlock =
+    good && isSocketRoom && client.isHost && handlers.onPlayAgain
+      ? h(
+          "button",
+          { class: "btn btn--primary btn--big room__again", type: "button", onclick: handlers.onPlayAgain },
+          "Re-deal the table — same players",
+        )
+      : good && isSocketRoom
+        ? h("p", { class: "room__ended-sub" }, "Waiting for the host to re-deal…")
+        : null;
   const body = h(
     "main",
     { id: "main", class: "sheet room" },
@@ -348,7 +359,8 @@ export function roomStandingsScreen(app, handlers) {
       h("span", { class: "verdict__title" }, verdict),
     ),
     list,
-    h("p", { class: "room__fine" }, "Every seat played the same lots, in the same order, at the same table. The host keeps the books."),
+    playAgainBlock,
+    h("p", { class: "room__fine" }, "Every seat played the same lots, in the same order, at the same table. The house keeps the books."),
     backLink("Back to the cover", handlers.onLeave),
   );
   return { body };
