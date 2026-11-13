@@ -140,6 +140,29 @@ can be served from any path on any static host (GitHub Pages, Netlify, S3, nginx
 `npm run build` and publish `dist/`. This repository is set up for GitHub Pages via a GitHub
 Actions workflow (`.github/workflows/deploy.yml`): every push to `main` rebuilds and redeploys.
 
+## Room relay (Socket.io) — optional
+
+Private rooms can also run on a small Socket.io service in `server/`: the service is the
+authoritative host for the shared sale (it owns the engine), supports up to 10 seats
+(humans + bots combined), 3/5/7/10/12/15/20-lot sales, mid-sale host failover to the
+next connected human, reconnect tokens kept in `sessionStorage`, and a "Re-deal the table"
+button on the final standings for the room's host. Public relays never see answers: the
+server sends each client a single-player POV snapshot.
+
+Deploy (Render, free plan, no card required):
+1. Connect this repository as a Web Service, Root Directory `server`.
+2. Language Node; Build Command `npm install`; Start Command `node server.js`.
+3. Free plan is fine (the service idles only after 15 minutes without traffic; matches
+   keep it awake). Cold starts are 30-60s on the first connection after a nap.
+4. Point the site at the relay by building with `VITE_ROOM_URL=wss://<your-service>.onrender.com`.
+   Without that variable (e.g. on the public Pages build) the game keeps the zero-config
+   MQTT rooms, so this service is strictly optional.
+
+Local run: `node server/server.js` (default port 3001, `PORT` to override), then build and
+preview with `VITE_ROOM_URL=ws://127.0.0.1:3001 npm run build && npm run preview`.
+`server/test-integration.mjs` exercises the relay end-to-end (seat cap, host failover,
+reconnect, resolution).
+
 ## Decisions (where the brief was silent)
 
 - **First-visit intro:** for a brand-new profile, the How to play modal opens automatically about
@@ -176,9 +199,11 @@ engine, listed for honesty):
 
 ## Known limitations
 
-- Multiplayer is casual: self-reported tallies, public relays, no anti-cheat, no sale history.
-- The room race gives everyone the same lots but not a shared table: you never see each other's
-  bids or answers live. Real-time shared-turn play would need a game server.
+- Multiplayer is casual: no accounts, no anti-cheat, no sale history. The hosted room relay
+  is server-authoritative (see "Room relay" below), but the public build still defaults to
+  the MQTT room race; whichever transport the live site uses is shown at room creation.
+- The room race gives everyone the same lots but not a shared table (MQTT path): you never
+  see each other's bids or answers live. The shared table exists on the relay path.
 - 
 - The bank is ~1,280 questions across 9 categories x 3 difficulties (built-in classics, the extra bank and the modern pack), and it was written by a machine.
   Most facts are high-confidence but the bank has not had a full human fact-check — treat it as a
