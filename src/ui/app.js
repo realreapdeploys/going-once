@@ -18,9 +18,8 @@ import {
   STEP,
   LOT_COUNT,
   EngineError,
-  createRoomGame,
 } from "../engine.js";
-import { ROSTER, getRivalById, describeSkills } from "../roster.js";
+import { ROSTER, getRivalById, describeSkills, registerRoomSeats } from "../roster.js";
 import { CATEGORIES } from "../questions.js";
 import {
   emptyProfile,
@@ -53,9 +52,11 @@ import { paddle, paddleSvg } from "./paddle.js";
 import * as anim from "./anim.js";
 import * as sound from "./sound.js";
 import { RoomClient } from "../room.js";
+import { RoomHost } from "../room-host.js";
+import { povSnapshot, remapSnapshot, BID_MS, STEAL_MS } from "../room-game.js";
 import { roomSetupScreen, roomLobbyScreen, roomStandingsScreen } from "./room-screens.js";
 import { coverScreen } from "./cover.js";
-import { lotScreen, roomStrip } from "./lot.js";
+import { lotScreen, roomStrip, attachLotHelpers } from "./lot.js";
 import { resultsScreen } from "./results.js";
 import { openHowToPlay, openLedger, openConfirm, isModalOpen } from "./modals.js";
 
@@ -87,7 +88,90 @@ export function startApp({ root, devDate = null } = {}) {
     unlockedNoticeShown: false,
     roomClient: null,
     setup: null,
+    roomHost: null,
+    roomMySeat: null,
+    roomLockedBid: null,
+    roomLockedSeen: null,
+    roomBidSeen: null,
+    roomFinal: null,
+    stealForPlayer: false,
   };
+
+  /* ---------------------------------------------------------------- rooms helpers */
+
+  function roomAwaiting() {
+    const state = app.state;
+    if (!state) return false;
+    if (state.phase === "answering") {
+      const awaiting = state.current && state.current.awaiting;
+      return !Array.isArray(awaiting) || awaiting.includes("player");
+    }
+    if (state.phase === "stealing") return app.stealForPlayer;
+    return true;
+  }
+
+  function setRoomTimer(state, deadline, duration) {
+    const ph = state.phase;
+    if (!deadline || (ph !== "bidding" && ph !== "answering" && ph !== "stealing")) {
+      app.timer = null;
+      return;
+    }
+    const fallback = ph === "bidding" ? BID_MS : ph === "answering" ? ANSWER_MS : STEAL_MS;
+    const dur = duration || fallback;
+    app.timer = { stage: ph, lotIndex: state.lotIndex, startedAt: deadline - dur, duration: dur };
+  }
+
+  function syncRoomDerived(povState, deadline, duration) {
+    if (Array.isArray(povState.seats)) registerRoomSeats(povState.seats);
+    app.state = povState;
+    app.roomDeadline = deadline || null;
+    app.roomDuration = duration || null;
+    if (povState.phase === "bidding") {
+      if (app.roomLockedSeen !== povState.lotIndex) {
+        app.roomLockedBid = null;
+        app.roomLockedSeen = povState.lotIndex;
+      }
+      if (app.roomBidSeen !== povState.lotIndex) {
+        const bounds = bidBounds(povState);
+        app.bid = currentLot(povState).isHammer ? bounds.min : 0;
+        app.roomBidSeen = povState.lotIndex;
+      }
+    } else {
+      app.roomLockedBid = null;
+      app.roomLockedSeen = null;
+    }
+    app.stealForPlayer = Boolean(povState.current && povState.phase === "stealing" && povState.current.stealFor === "player");
+    setRoomTimer(povState, deadline, duration);
+    if (povState.phase === "finished") {
+      app.roomFinal = povState.final || null;
+      app.screen = "room-standings";
+      return "finished";
+    }
+    app.screen = "lot";
+    return "lot";
+  }
+
+  function roomHostUpdated() {
+    const host = app.roomHost;
+    if (!host || !host.sale) return;
+    app.roomMySeat = "h-1";
+    const pov = host.hostSnapshot();
+    const dur = host.deadline ? { bidding: BID_MS, answering: ANSWER_MS, stealing: STEAL_MS }[host.sale.phase] || null : null;
+    syncRoomDerived(pov, host.deadline, dur);
+    render();
+  }
+
+  function roomGuestUpdated() {
+    const client = app.roomClient;
+    const snap = client && client.lastSnapshot;
+    if (!snap || client.phase !== "playing") {
+      return; // the first snapshot arrives within a beat of the sale opening
+    }
+    app.roomMySeat = client.mySeat;
+    const pov = remapSnapshot(snap.pub, client.mySeat || "nobody");
+    syncRoomDerived(pov, snap.deadline, snap.duration);
+    render();
+  }
 
   /* ---------------------------------------------------------------- storage */
 
@@ -185,7 +269,6 @@ export function startApp({ root, devDate = null } = {}) {
     if (!app.state || app.state.phase === "finished") {
       if (app.state && app.state.phase === "finished") {
         if (app.roomClient) {
-          finishRoomGame();
           app.screen = "room-standings";
           mountScreen(roomStandingsView());
           return;
@@ -298,6 +381,18 @@ export function startApp({ root, devDate = null } = {}) {
     const lot = currentLot(app.state);
     const bounds = bidBounds(app.state);
     const amount = lot.isHammer ? snapBid(app.bid, bounds) : snapBid(app.bid, bounds);
+    if (app.roomClient && app.roomClient.phase === "playing") {
+      if (app.roomLockedBid != null) return;
+      if (amount > 0) sound.play("flick");
+      app.roomLockedBid = amount;
+      if (app.roomClient.isHost && app.roomHost) app.roomHost.noteBid("h-1", amount);
+      else app.roomClient.publishAction({ t: "bid", amount });
+      app.selection = null;
+      app.revealDone = false;
+      render();
+      playReveal();
+      return;
+    }
     if (amount > 0) sound.play("flick");
     if (!dispatch({ type: "bid", amount })) return;
     app.selection = null;
@@ -322,6 +417,7 @@ export function startApp({ root, devDate = null } = {}) {
 
   function selectAnswer(index) {
     if (!app.state) return;
+    if (app.roomClient && !roomAwaiting()) return;
     if (app.state.phase === "answering") {
       app.selection = index;
       root.querySelector("[data-lot-screen]")?.dispatchEvent(new CustomEvent("goingonce:select", { detail: { index } }));
@@ -333,6 +429,30 @@ export function startApp({ root, devDate = null } = {}) {
 
   function lockAnswer() {
     if (!app.state) return;
+    if (app.roomClient && app.roomClient.phase === "playing") {
+      if (app.state.phase === "answering") {
+        if (!roomAwaiting()) return;
+        const index = app.selection;
+        app.timer = null;
+        app.selection = null;
+        if (app.roomClient.isHost && app.roomHost) app.roomHost.noteAnswer("h-1", index);
+        else app.roomClient.publishAction({ t: "answer", index });
+        render();
+        return;
+      }
+      if (app.state.phase === "stealing" && app.stealStage) {
+        if (!roomAwaiting()) return;
+        const index = app.selection;
+        app.timer = null;
+        app.selection = null;
+        app.stealStage = false;
+        if (app.roomClient.isHost && app.roomHost) app.roomHost.noteSteal("h-1", index);
+        else app.roomClient.publishAction({ t: "steal", index });
+        render();
+        return;
+      }
+      return;
+    }
     if (app.state.phase === "answering") {
       const index = app.selection;
       if (!dispatch({ type: "answer", index })) return;
@@ -352,9 +472,10 @@ export function startApp({ root, devDate = null } = {}) {
 
   function startSteal() {
     if (!app.state || app.state.phase !== "stealing") return;
+    if (app.roomClient && !roomAwaiting()) return;
     app.stealStage = true;
     app.selection = null;
-    app.timer = { stage: "stealing", lotIndex: app.state.lotIndex, startedAt: Date.now() };
+    app.timer = { stage: "stealing", lotIndex: app.state.lotIndex, startedAt: Date.now(), duration: STEAL_MS };
     persist();
     sound.play("flick");
     render();
@@ -362,6 +483,15 @@ export function startApp({ root, devDate = null } = {}) {
 
   function declineSteal() {
     if (!app.state || app.state.phase !== "stealing") return;
+    if (app.roomClient && app.roomClient.phase === "playing") {
+      if (!roomAwaiting()) return;
+      app.timer = null;
+      app.stealStage = false;
+      if (app.roomClient.isHost && app.roomHost) app.roomHost.noteDecline("h-1");
+      else app.roomClient.publishAction({ t: "decline" });
+      render();
+      return;
+    }
     if (!dispatch({ type: "decline" })) return;
     app.timer = null;
     app.stealStage = false;
@@ -379,6 +509,16 @@ export function startApp({ root, devDate = null } = {}) {
 
   function nextLot() {
     if (!app.state || app.state.phase !== "resolved") return;
+    if (app.roomClient) {
+      if (!app.roomClient.isHost || !app.roomHost) return;
+      sound.play("flick");
+      app.roomHost.nextLot();
+      app.selection = null;
+      app.revealDone = false;
+      app.timer = null;
+      app.roomLockedBid = null;
+      return; // roomHostUpdated renders the next lot
+    }
     sound.play("flick");
     if (!dispatch({ type: "next" })) return;
     app.selection = null;
@@ -411,8 +551,9 @@ export function startApp({ root, devDate = null } = {}) {
   function syncRoom() {
     const client = app.roomClient;
     if (!client) return;
-    if (client.phase === "playing" && !app.state && client.roomSeed) {
-      startRoomSale();
+    if (client.phase === "playing") {
+      if (client.isHost) return; // the host renders through roomHostUpdated
+      roomGuestUpdated();
       return;
     }
     if (client.phase === "ended") {
@@ -420,6 +561,9 @@ export function startApp({ root, devDate = null } = {}) {
       app.actions = [];
       app.selection = null;
       app.stealStage = false;
+      app.timer = null;
+      app.roomHost = null;
+      app.roomFinal = null;
       app.screen = "room-standings";
       render();
       return;
@@ -435,8 +579,16 @@ export function startApp({ root, devDate = null } = {}) {
   }
 
   function releaseRoom() {
-    if (app.roomClient) app.roomClient.leave();
+    if (app.roomClient) {
+      if (app.roomClient.isHost && app.roomClient.phase === "playing") app.roomClient.endRoom();
+      else app.roomClient.leave();
+    }
     app.roomClient = null;
+    app.roomHost = null;
+    app.roomFinal = null;
+    app.roomLockedBid = null;
+    app.roomMySeat = null;
+    app.stealForPlayer = false;
     app.setup = null;
     app.state = null;
     app.actions = [];
@@ -445,30 +597,6 @@ export function startApp({ root, devDate = null } = {}) {
     app.stealStage = false;
     app.screen = "cover";
     render();
-  }
-
-  function startRoomSale() {
-    const client = app.roomClient;
-    if (!client || !client.roomSeed) return;
-    app.state = createRoomGame(client.roomSeed, {
-      lotCount: client.settings.lotCount,
-      difficulty: client.settings.difficulty,
-    });
-    app.actions = [];
-    app.timer = null;
-    app.selection = null;
-    app.stealStage = false;
-    app.revealDone = false;
-    const bounds = bidBounds(app.state);
-    app.bid = currentLot(app.state).isHammer ? bounds.min : 0;
-    app.screen = "lot";
-    render();
-  }
-
-  function finishRoomGame() {
-    const client = app.roomClient;
-    if (!client || !app.state) return;
-    client.finish(app.state.banks.player);
   }
 
   function copyRoomCode() {
@@ -563,7 +691,14 @@ export function startApp({ root, devDate = null } = {}) {
           opener: null,
           onConfirm: () => client && client.disband(),
         }),
-      onStart: () => client && client.start(),
+      onStart: () => {
+        if (!client || client.phase !== "lobby") return;
+        sound.unlock();
+        const host = new RoomHost(client, { onUpdate: roomHostUpdated });
+        client.hostEngine = host;
+        app.roomHost = host;
+        host.start(); // broadcasts the sale; roomHostUpdated takes over rendering
+      },
       onSettings: (patch) => client && client.setSettings(patch),
       onCopyCode: copyRoomCode,
       onLeave: releaseRoom,
@@ -577,6 +712,7 @@ export function startApp({ root, devDate = null } = {}) {
     /* ---------------------------------------------------------------- results */
 
   function finishGame() {
+    if (app.roomClient) return; // room sales never touch daily saves
     if (!app.state || app.state.phase !== "finished") return;
     const already = app.profile.history.some((entry) => entry.date === app.today);
     if (!already) {
@@ -731,6 +867,7 @@ export function startApp({ root, devDate = null } = {}) {
 
   app.dispatch = dispatch;
   app.render = render;
+  attachLotHelpers(app);
   app.announce = announce;
   app.persist = persist;
   app.persistProfile = persistProfile;
