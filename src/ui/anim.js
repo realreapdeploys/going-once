@@ -247,3 +247,42 @@ export function flipPaddle(el) {
     { duration: 520, easing: "cubic-bezier(.4,.1,.2,1)", fill: "forwards" },
   );
 }
+
+/**
+ * Winner beat: the winning portrait lifts, is ringed in brass and the losers sink and fade.
+ * Used on the resolved lot screen to show who took the lot. Respects reduced motion.
+ */
+export function winnerBeat(winnerEl, rivalEls) {
+  if (winnerEl) animate(
+    winnerEl,
+    [
+      { transform: "translateY(0)" },
+      { transform: "translateY(-10px)" },
+      { transform: "translateY(-6px)" },
+    ],
+    { duration: 600, easing: "cubic-bezier(.2,.7,.2,1)", fill: "forwards" },
+  );
+  const plate = winnerEl ? winnerEl.closest("[data-rival]") : null;
+  if (plate) plate.classList.add("rival--winner");
+  rivalEls.forEach((el) => {
+    if (!el || el === winnerEl) return;
+    animate(el, [{ opacity: 1 }, { opacity: 0.45 }], { duration: 500, fill: "forwards" });
+    el.classList.add("rival--sunk");
+  });
+}
+
+/**
+ * Verdict beat: a catalogue-style verdict line fades up with a short settle.
+ * e.g. "Sold, to Venn, for 450 chips." / "Wrong. The stake is forfeit."
+ */
+export function verdictRise(el) {
+  if (!el) return;
+  animate(
+    el,
+    [
+      { opacity: 0, transform: "translateY(10px)" },
+      { opacity: 1, transform: "translateY(0)" },
+    ],
+    { duration: 450, easing: "cubic-bezier(.2,.7,.2,1)", fill: "backwards" },
+  );
+}
