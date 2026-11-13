@@ -161,6 +161,7 @@ function promoteHost(io, room) {
 function startTimers(io, room) {
   clearRoomTimers(room);
   const sale = room.sale;
+  room.timerPhase = sale ? sale.phase : null;
   if (sale.phase === "bidding") {
     room.deadlineAt = now() + BID_MS;
     room.timers.push(setTimeout(() => settleBidding(io, room), BID_MS));
@@ -182,7 +183,8 @@ function seatListDelta(io, room) {
 
 function settleBidding(io, room) {
   const sale = room.sale;
-  if (!sale || sale.phase !== "bidding") return;
+  if (!sale) return;
+  if (sale.phase !== "bidding" || room.timerPhase !== "bidding") return;
   const bids = {};
   for (const id of room.locked.keys()) {
     const amount = room.locked.get(id);
@@ -195,7 +197,9 @@ function settleBidding(io, room) {
 
 function settleAnswers(io, room) {
   const sale = room.sale;
-  if (!sale || sale.phase !== "answering") return;
+  if (!sale) return;
+  // a stale timer from the previous lot must never touch the current one
+  if (sale.phase !== "answering" || room.timerPhase !== "answering") return;
   const awaiting = [...(sale.current?.awaiting ?? [])];
   for (const seatId of awaiting) {
     try { applyAnswer(sale, seatId, null); } catch (err) { console.warn(`[room ${room.code}] auto answer ${seatId}:`, err.message); }
@@ -206,7 +210,8 @@ function settleAnswers(io, room) {
 
 function settleSteal(io, room) {
   const sale = room.sale;
-  if (!sale || sale.phase !== "stealing") return;
+  if (!sale) return;
+  if (sale.phase !== "stealing" || room.timerPhase !== "stealing") return;
   try { applyDecline(sale, sale.stealFor); } catch (err) { console.warn(`[room ${room.code}] auto decline:`, err.message); }
   afterEngineChange(io, room);
 }
