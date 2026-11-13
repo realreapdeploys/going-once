@@ -1,0 +1,541 @@
+// Going Once: screen controller and state machine.
+// The UI never computes game results: it dispatches actions to reduce() and renders the state.
+
+import {
+  createGame,
+  reduce,
+  replay,
+  bidBounds,
+  currentLot,
+  standings,
+  playerRank,
+  outcomeKind,
+  rivalTell,
+  localDateString,
+  saleNumber,
+  isValidDateString,
+  ANSWER_SECONDS,
+  STEP,
+  LOT_COUNT,
+  EngineError,
+} from "../engine.js";
+import { ROSTER, getRivalById, describeSkills } from "../roster.js";
+import { CATEGORIES } from "../questions.js";
+import {
+  emptyProfile,
+  applyFinishedGame,
+  displayStreak,
+  rankFor,
+  rankProgress,
+  unlockedPaddles,
+  PADDLES,
+  RANKS,
+  buildShareText,
+} from "../progress.js";
+import { createStore, STORAGE_KEY } from "../store.js";
+import { remainingMs, ANSWER_MS, createSequenceClock } from "../timing.js";
+import {
+  formatChips,
+  ordinal,
+  longDate,
+  formatCountdown,
+  signedChips,
+  deltaLabel,
+  difficultyLabel,
+  msUntilMidnight,
+  surnameOf,
+} from "../format.js";
+import { snapBid, quickPicks, stepBid } from "../bidmath.js";
+import { h, mount, clear, cx, tiltFor } from "./dom.js";
+import { portraitMarkup, portraitLabel } from "./portrait.js";
+import { paddle, paddleSvg } from "./paddle.js";
+import * as anim from "./anim.js";
+import * as sound from "./sound.js";
+import { coverScreen } from "./cover.js";
+import { lotScreen, roomStrip } from "./lot.js";
+import { resultsScreen } from "./results.js";
+import { openHowToPlay, openLedger, openConfirm, isModalOpen } from "./modals.js";
+
+const STAMP_TILT = (seed) => ({ "--tilt": `${tiltFor(seed, 4)}deg` });
+
+export function startApp({ root, devDate = null } = {}) {
+  const storeKey = devDate ? "goingonce:dev" : STORAGE_KEY;
+  const store = createStore(undefined, storeKey);
+  const clock = createSequenceClock();
+
+  const app = {
+    root,
+    store,
+    devDate,
+    today: devDate || localDateString(),
+    profile: emptyProfile(),
+    state: null,
+    screen: "cover",
+    actions: [],
+    timer: null,
+    bid: 0,
+    selection: null,
+    stealStage: false,
+    lastGame: null,
+    lastResult: null,
+    revealDone: false,
+    persistent: true,
+    liveEl: null,
+    unlockedNoticeShown: false,
+  };
+
+  /* ---------------------------------------------------------------- storage */
+
+  function loadAll() {
+    const loaded = store.load(app.today);
+    app.profile = loaded.profile;
+    app.persistent = loaded.persistent;
+    const save = loaded.saves[app.today];
+    if (save && save.actions.length) {
+      try {
+        app.state = replay(app.today, save.actions);
+        app.actions = save.actions.map((a) => ({ ...a }));
+        app.timer = save.timer;
+      } catch {
+        app.state = null;
+        app.actions = [];
+        app.timer = null;
+      }
+    } else {
+      app.state = null;
+      app.actions = [];
+      app.timer = null;
+    }
+    sound.setEnabled(app.profile.soundOn);
+  }
+
+  function persist() {
+    if (!app.state) {
+      store.saveProfile(app.profile);
+      return;
+    }
+    store.save({ profile: app.profile, saves: { ...store.snapshot().saves, [app.today]: { engineVersion: 1, actions: app.actions, timer: app.timer } } });
+  }
+
+  function persistProfile() {
+    store.saveProfile(app.profile);
+  }
+
+  /* ---------------------------------------------------------------- engine dispatch */
+
+  function dispatch(action) {
+    if (!app.state) return false;
+    let next;
+    try {
+      next = reduce(app.state, action);
+    } catch (error) {
+      if (error instanceof EngineError) return false;
+      return false;
+    }
+    app.state = next;
+    app.actions = [...app.actions, action];
+    persist();
+    return true;
+  }
+
+  function newGame() {
+    app.state = createGame(app.today);
+    app.actions = [];
+    app.timer = null;
+    app.selection = null;
+    app.stealStage = false;
+    app.revealDone = false;
+    app.bid = 0;
+    persist();
+  }
+
+  /* ---------------------------------------------------------------- live region */
+
+  function announce(message) {
+    if (!app.liveEl) return;
+    app.liveEl.textContent = "";
+    setTimeout(() => {
+      if (app.liveEl) app.liveEl.textContent = message;
+    }, 30);
+  }
+
+  /* ---------------------------------------------------------------- render */
+
+  function render() {
+    clock.begin();
+    if (isModalOpen()) return;
+    if (!app.state || app.state.phase === "finished") {
+      if (app.state && app.state.phase === "finished") {
+        finishGame();
+        app.screen = "results";
+        mountScreen(resultsView());
+      } else {
+        app.screen = "cover";
+        mountScreen(coverView());
+      }
+      return;
+    }
+    app.screen = "lot";
+    mountScreen(lotView());
+  }
+
+  function mountScreen(view) {
+    const scrollY = window.scrollY;
+    mount(root, view.header || null, view.body, app.liveEl);
+    if (view.after) view.after();
+    if (view.scrollTo === false) window.scrollTo(0, scrollY);
+    else if (view.scrollTo === "top") window.scrollTo(0, 0);
+  }
+
+  /* ---------------------------------------------------------------- cover */
+
+  function coverView() {
+    return coverScreen(app, {
+      onStart: () => startOrResume(),
+      onHowTo: (opener) => openHowToPlay(app, opener),
+      onLedger: (opener) => openLedger(app, opener),
+      onSound: toggleSound,
+      onPickPaddle: (id) => {
+        app.profile = { ...app.profile, paddle: id };
+        persistProfile();
+        applyPaddle();
+        render();
+      },
+    });
+  }
+
+  function toggleSound() {
+    app.profile = { ...app.profile, soundOn: !app.profile.soundOn };
+    sound.setEnabled(app.profile.soundOn);
+    if (app.profile.soundOn) sound.play("coin");
+    persistProfile();
+    render();
+  }
+
+  function applyPaddle() {
+    const chosen = PADDLES.find((p) => p.id === app.profile.paddle) || PADDLES[0];
+    document.documentElement.style.setProperty("--paddle", chosen.color);
+    document.documentElement.style.setProperty("--paddle-trim", chosen.trim);
+  }
+
+  function startOrResume() {
+    sound.unlock();
+    if (!app.state) {
+      newGame();
+      openIntroIfNeeded();
+    }
+    app.selection = null;
+    app.stealStage = false;
+    if (app.state.phase === "stealing" && app.timer) app.stealStage = true;
+    render();
+  }
+
+  function openIntroIfNeeded() {
+    if (app.profile.seenIntro) return;
+    app.profile = { ...app.profile, seenIntro: true };
+    persistProfile();
+    setTimeout(() => openHowToPlay(app, null), 320);
+  }
+
+  /* ---------------------------------------------------------------- lot screen */
+
+  function lotView() {
+    const view = lotScreen(app, {
+      onBidChange: (amount) => {
+        app.bid = amount;
+        updateBidUI();
+      },
+      onConfirmBid: confirmBid,
+      onSelect: (index) => selectAnswer(index),
+      onLockAnswer: lockAnswer,
+      onSteal: startSteal,
+      onDecline: declineSteal,
+      onNext: nextLot,
+      onSkipSequence: () => clock.skip(),
+      onHowTo: (opener) => openHowToPlay(app, opener),
+      onLedger: (opener) => openLedger(app, opener),
+      onSound: toggleSound,
+      announce,
+    });
+    return view;
+  }
+
+  function updateBidUI() {
+    const screen = root.querySelector("[data-lot-screen]");
+    if (screen) {
+      const detail = { bid: app.bid };
+      screen.dispatchEvent(new CustomEvent("goingonce:bid", { detail }));
+    }
+  }
+
+  function confirmBid() {
+    if (!app.state || app.state.phase !== "bidding") return;
+    const lot = currentLot(app.state);
+    const bounds = bidBounds(app.state);
+    const amount = lot.isHammer ? snapBid(app.bid, bounds) : snapBid(app.bid, bounds);
+    if (amount > 0) sound.play("flick");
+    if (!dispatch({ type: "bid", amount })) return;
+    app.selection = null;
+    app.revealDone = false;
+    const phase = app.state.phase;
+    if (phase === "answering") startAnswerTimer();
+    render();
+    playReveal();
+  }
+
+  function startAnswerTimer() {
+    app.timer = { stage: "answering", lotIndex: app.state.lotIndex, startedAt: Date.now() };
+    persist();
+  }
+
+  function playReveal() {
+    const seq = clock.begin();
+    const screen = root.querySelector("[data-lot-screen]");
+    if (!screen) return;
+    screen.dispatchEvent(new CustomEvent("goingonce:reveal", { detail: { seq } }));
+  }
+
+  function selectAnswer(index) {
+    if (!app.state) return;
+    if (app.state.phase === "answering") {
+      app.selection = index;
+      root.querySelector("[data-lot-screen]")?.dispatchEvent(new CustomEvent("goingonce:select", { detail: { index } }));
+    } else if (app.state.phase === "stealing" && app.stealStage) {
+      app.selection = index;
+      root.querySelector("[data-lot-screen]")?.dispatchEvent(new CustomEvent("goingonce:select", { detail: { index } }));
+    }
+  }
+
+  function lockAnswer() {
+    if (!app.state) return;
+    if (app.state.phase === "answering") {
+      const index = app.selection;
+      if (!dispatch({ type: "answer", index })) return;
+      app.timer = null;
+      app.selection = null;
+      render();
+      afterResolve();
+    } else if (app.state.phase === "stealing" && app.stealStage) {
+      const index = app.selection;
+      if (!dispatch({ type: "steal", index })) return;
+      app.timer = null;
+      app.selection = null;
+      render();
+      afterResolve();
+    }
+  }
+
+  function startSteal() {
+    if (!app.state || app.state.phase !== "stealing") return;
+    app.stealStage = true;
+    app.selection = null;
+    app.timer = { stage: "stealing", lotIndex: app.state.lotIndex, startedAt: Date.now() };
+    persist();
+    sound.play("flick");
+    render();
+  }
+
+  function declineSteal() {
+    if (!app.state || app.state.phase !== "stealing") return;
+    if (!dispatch({ type: "decline" })) return;
+    app.timer = null;
+    app.stealStage = false;
+    render();
+    afterResolve();
+  }
+
+  function afterResolve() {
+    const record = app.state.history[app.state.history.length - 1];
+    if (!record) return;
+    const delta = record.deltas.player;
+    if (delta > 0) sound.play("right");
+    else if (delta < 0) sound.play("wrong");
+  }
+
+  function nextLot() {
+    if (!app.state || app.state.phase !== "resolved") return;
+    sound.play("flick");
+    if (!dispatch({ type: "next" })) return;
+    app.selection = null;
+    app.revealDone = false;
+    app.timer = null;
+    if (app.state.phase === "bidding") {
+      const lot = currentLot(app.state);
+      const bounds = bidBounds(app.state);
+      app.bid = lot.isHammer ? bounds.min : 0;
+    }
+    render();
+    if (app.state.phase === "finished") return;
+    const seq = clock.begin();
+    const screen = root.querySelector("[data-lot-screen]");
+    if (screen) screen.dispatchEvent(new CustomEvent("goingonce:newlot", { detail: { seq } }));
+  }
+
+  /* ---------------------------------------------------------------- results */
+
+  function finishGame() {
+    if (!app.state || app.state.phase !== "finished") return;
+    const already = app.profile.history.some((entry) => entry.date === app.today);
+    if (!already) {
+      const result = applyFinishedGame(app.profile, {
+        date: app.today,
+        chips: app.state.banks.player,
+        rank: playerRank(app.state),
+      });
+      app.profile = result.profile;
+      app.lastResult = result;
+      persistProfile();
+    } else if (!app.lastResult) {
+      const chips = app.state.banks.player;
+      const rank = playerRank(app.state);
+      const entry = app.profile.history.find((e) => e.date === app.today);
+      app.lastResult = { gained: entry ? entry.rep : 0, rankedUp: false, newPaddles: [] };
+      app.lastChips = chips;
+      app.lastRank = rank;
+    }
+  }
+
+  function resultsView() {
+    return resultsScreen(app, {
+      onCopy: copyResult,
+      onHowTo: (opener) => openHowToPlay(app, opener),
+      onLedger: (opener) => openLedger(app, opener),
+      onSound: toggleSound,
+      onPlayNew: () => {
+        app.today = localDateString();
+        app.state = null;
+        app.actions = [];
+        app.timer = null;
+        loadAll();
+        render();
+      },
+    });
+  }
+
+  async function copyResult() {
+    const text = buildShareText(app.state, `${location.origin}${location.pathname}`);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        return { ok: true, text };
+      }
+    } catch {
+      /* fall through to the textarea */
+    }
+    try {
+      const area = document.createElement("textarea");
+      area.value = text;
+      area.setAttribute("readonly", "");
+      area.style.position = "fixed";
+      area.style.top = "-1000px";
+      document.body.appendChild(area);
+      area.select();
+      const ok = document.execCommand && document.execCommand("copy");
+      area.remove();
+      if (ok) return { ok: true, text };
+    } catch {
+      /* fall through */
+    }
+    return { ok: false, text };
+  }
+
+  /* ---------------------------------------------------------------- rollover */
+
+  function checkDate() {
+    if (app.devDate) return;
+    const now = localDateString();
+    if (now === app.today) return;
+    if (app.state && app.state.phase !== "finished") return;
+    app.today = now;
+    app.state = null;
+    app.actions = [];
+    app.timer = null;
+    loadAll();
+    render();
+  }
+
+  /* ---------------------------------------------------------------- boot */
+
+  function boot() {
+    app.liveEl = h("div", { class: "sr-live", role: "status", "aria-live": "polite", "aria-atomic": "true" });
+    loadAll();
+    applyPaddle();
+    if (app.state) {
+      if (app.state.phase === "answering" || app.state.phase === "stealing") {
+        const left = remainingMs(app.timer ? app.timer.startedAt : null);
+        if (!app.timer && app.state.phase === "answering") {
+          app.timer = { stage: "answering", lotIndex: app.state.lotIndex, startedAt: Date.now() };
+          persist();
+        }
+        if (left <= 0) {
+          if (app.state.phase === "answering") {
+            dispatch({ type: "answer", index: null });
+            app.timer = null;
+            persist();
+          } else if (app.timer) {
+            dispatch({ type: "steal", index: null });
+            app.timer = null;
+            persist();
+          }
+        } else if (app.state.phase === "stealing" && app.timer) {
+          app.stealStage = true;
+        }
+      }
+      if (app.state.phase === "bidding") {
+        const bounds = bidBounds(app.state);
+        app.bid = currentLot(app.state).isHammer ? bounds.min : 0;
+      }
+    }
+    render();
+    startWatchers();
+    if (!app.profile.seenIntro && !app.state) {
+      /* the intro opens from the cover's start button, or on its own after a moment */
+      setTimeout(() => {
+        if (!app.state && !isModalOpen() && app.screen === "cover") openIntroIfNeeded();
+      }, 700);
+    }
+  }
+
+  let watcherId = null;
+  function startWatchers() {
+    if (watcherId) clearInterval(watcherId);
+    watcherId = setInterval(() => {
+      checkDate();
+      if (app.screen === "cover" || app.screen === "results") updateCountdowns();
+    }, 1000);
+    document.addEventListener("visibilitychange", () => {
+      checkDate();
+      if (!document.hidden) {
+        const screen = root.querySelector("[data-lot-screen]");
+        if (screen) screen.dispatchEvent(new CustomEvent("goingonce:resume"));
+      }
+    });
+    window.addEventListener("focus", () => {
+      checkDate();
+      const screen = root.querySelector("[data-lot-screen]");
+      if (screen) screen.dispatchEvent(new CustomEvent("goingonce:resume"));
+    });
+  }
+
+  function updateCountdowns() {
+    const nodes = root.querySelectorAll("[data-countdown]");
+    const ms = msUntilMidnight();
+    nodes.forEach((node) => {
+      node.textContent = formatCountdown(ms);
+    });
+  }
+
+  app.dispatch = dispatch;
+  app.render = render;
+  app.announce = announce;
+  app.persist = persist;
+  app.persistProfile = persistProfile;
+  app.applyPaddle = applyPaddle;
+  app.STAMP_TILT = STAMP_TILT;
+  app.loadAll = loadAll;
+  app.clock = clock;
+
+  boot();
+  return app;
+}
+
