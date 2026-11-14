@@ -224,6 +224,16 @@ function achievementsPlate(app) {
   );
 }
 
+function eveningPlate(state) {
+  return h(
+    "section",
+    { class: "reputation plate reputation--evening" },
+    h("h2", { class: "label" }, "Tonight's tally"),
+    h("p", { class: "reputation__big" }, h("span", { class: "num" }, formatChips(state.banks.player)), h("span", { class: "reputation__of" }, " chips")),
+    h("p", { class: "evening__line italic" }, "Not for the ledger. The daily sale keeps the only record that lasts."),
+  );
+}
+
 function lotGrid(state) {
   return h(
     "div",
@@ -266,10 +276,28 @@ function patterPlate(state) {
 
 export function resultsScreen(app, handlers) {
   const state = app.state;
-  const saleNo = saleNumber(state.date);
+  const isEvening = Boolean(app.endless);
+  const saleNo = isEvening ? 0 : saleNumber(state.date);
   const nextSale = msUntilMidnight();
 
-  const share = h(
+  const eveningFooter = h(
+    "div",
+    { class: "share share--evening" },
+    h(
+      "p",
+      { class: "evening" },
+      h("span", { class: "stamp stamp--gain" }, "Evening table"),
+      h("span", { class: "evening__text italic" }, "Tonight's chips are just tonight's chips. The ledger and reputation rest — only the daily sale counts."),
+    ),
+    h(
+      "div",
+      { class: "results__actions" },
+      h("button", { class: "btn btn--primary", type: "button", onclick: handlers.onAgain }, "Another evening"),
+      h("button", { class: "btn btn--ghost", type: "button", onclick: handlers.onHome }, "Back to the cover"),
+    ),
+  );
+
+  const share = isEvening ? eveningFooter : h(
     "div",
     { class: "share" },
     h(
@@ -313,7 +341,7 @@ export function resultsScreen(app, handlers) {
     ),
   );
 
-  const newSaleOpen = app.today !== localDateString();
+  const newSaleOpen = !isEvening && app.today !== localDateString();
   const banner = newSaleOpen
     ? h(
         "div",
@@ -326,7 +354,7 @@ export function resultsScreen(app, handlers) {
   const header = h(
     "header",
     { class: "results__head" },
-    h("p", { class: "label" }, `Sale No. ${saleNo}`),
+    h("p", { class: "label" }, isEvening ? `Evening table · ${state.lots.length} lots` : `Sale No. ${saleNo}`),
     h("h1", { class: "results__title" }, "The Sale Closes"),
     h("p", { class: "results__sub italic" }, "The hammer has fallen. The ledger is closed."),
   );
@@ -340,7 +368,7 @@ export function resultsScreen(app, handlers) {
       "div",
       { class: "results__grid" },
       h("section", { class: "results__standings plate", "aria-labelledby": "standings-title" }, h("h2", { id: "standings-title", class: "label" }, "Final standings"), standingsTable(state, app)),
-      reputationPlate(app),
+      isEvening ? eveningPlate(state) : reputationPlate(app),
     ),
     achievementsPlate(app),
     lotGrid(state),
@@ -350,13 +378,15 @@ export function resultsScreen(app, handlers) {
       "footer",
       { class: "results__foot" },
       share,
-      h(
-        "div",
-        { class: "results__actions" },
-        h("button", { class: "btn btn--ghost", type: "button", onclick: (e) => handlers.onHowTo(e.currentTarget) }, "How to play"),
-        h("button", { class: "btn btn--ghost", type: "button", onclick: (e) => handlers.onLedger(e.currentTarget) }, "Your ledger"),
-        soundToggle(app.profile, handlers.onSound),
-      ),
+      isEvening
+        ? null
+        : h(
+            "div",
+            { class: "results__actions" },
+            h("button", { class: "btn btn--ghost", type: "button", onclick: (e) => handlers.onHowTo(e.currentTarget) }, "How to play"),
+            h("button", { class: "btn btn--ghost", type: "button", onclick: (e) => handlers.onLedger(e.currentTarget) }, "Your ledger"),
+            soundToggle(app.profile, handlers.onSound),
+          ),
     ),
   );
 
@@ -367,7 +397,7 @@ export function resultsScreen(app, handlers) {
       body.querySelectorAll(".badge__ink").forEach((el, i) => anim.stampIn(el, 120 + i * 160));
       const rep = body.querySelector("[data-rep]");
       const result = app.lastResult || { gained: 0 };
-      anim.tweenNumber(rep, 0, result.gained, { duration: 800, format: (n) => `+${formatChips(n)}` });
+      if (rep) anim.tweenNumber(rep, 0, result.gained, { duration: 800, format: (n) => `+${formatChips(n)}` });
       const fill = body.querySelector("[data-rankfill]");
       if (fill) {
         const target = rankProgress(app.profile.reputation).fraction;
