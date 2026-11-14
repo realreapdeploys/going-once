@@ -54,9 +54,9 @@ export const ROSTER = Object.freeze([
     },
 
     title: "Professional gambler",
-    tagline: "Bids big on anything. Half of it is theatre.",
-    boldness: 0.95,
-    bluff: 0.5,
+    tagline: "Bids big on anything. Much of it is theatre.",
+    boldness: 0.85,
+    bluff: 0.35,
     skills: { "Geography": 0.5, "History": 0.4, "Video Games & Streaming": 0.75, "Science": 0.4, "Sport": 0.85, "Film & TV": 0.55, "Music": 0.5, "Technology": 0.5, "Arts & Literature": 0.45 },
     portrait: `${BUST}
       <circle cx="50" cy="68" r="2" fill="currentColor" stroke="none"/>
