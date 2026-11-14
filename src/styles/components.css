@@ -343,3 +343,45 @@ select.field {
   font-family: var(--font-body);
   font-size: 16px;
 }
+
+/* ---------------------------------------------------------- evening table */
+.endless__choices {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 10px 0 16px;
+}
+.endless__choice[aria-checked="true"] {
+  background: var(--oxblood);
+  border-color: var(--oxblood);
+  color: var(--paper);
+}
+
+/* ---------------------------------------------------------- evening table */
+.evening {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 560px;
+  margin: 0 auto 12px;
+}
+.evening__text {
+  color: var(--ink-soft);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.evening__line {
+  color: var(--ink-soft);
+  font-size: 14px;
+  margin: 4px 0 0;
+}
+.evening__tally {
+  font-size: 14px;
+  margin: 0;
+}
+.share--evening {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
