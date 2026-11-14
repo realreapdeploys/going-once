@@ -841,9 +841,7 @@
 }
 
 .standing--you td {
-  border-bottom: 2px solid var(--brass);
-  background: color-mix(in srgb, var(--brass) 10%, transparent);
-  padding-bottom: 9px;
+  background: color-mix(in srgb, var(--brass) 11%, transparent);
 }
 
 .standing__who {
@@ -1391,3 +1389,39 @@
 .badgeslot__name { font-size: 13px; font-weight: 700; margin: 0 0 2px; }
 .badgeslot__hint { font-size: 12px; color: var(--ink-soft); margin: 0; }
 .badgeslot--earned .badgeslot__hint { color: var(--brass-text); }
+
+/* ---------------------------------------------------------- mobile ≤560px */
+@media (max-width: 560px) {
+  .standing td { padding: 8px 4px; }
+  .standing__rank { width: 30px; font-size: 12px; }
+  .standing__who { min-width: 0; gap: 6px; }
+  .standing__name { min-width: 0; max-width: 132px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; }
+  .standing__stamp { display: none; }
+  .standing__chips { font-size: 13px; }
+  .standing__portrait { width: 26px; height: 32px; }
+  .standing__paddle { width: 20px; }
+  .chip { gap: 4px; }
+  .chip__disc { width: 12px; height: 12px; }
+
+  .lotgrid { gap: 6px; padding: 10px 12px; }
+  .lotgrid__cell { width: 34px; height: 40px; font-size: 13px; }
+
+  .lotledger, .lots { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .lotledger th, .lotledger td, .lots th, .lots td { white-space: nowrap; font-size: 12px; }
+
+  .results__title { font-size: 34px; }
+  .badges__row { gap: 10px; }
+  .badge { max-width: 100%; }
+  .footgrid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .lotgrid { gap: 4px; padding: 10px 8px; }
+  .lotgrid__cell { width: 44px; height: 44px; font-size: 15px; }
+  .results__actions .btn { min-height: 44px; }
+}
+
+@media (max-width: 560px) {
+  .lotrow__toggle { min-width: 44px; min-height: 44px; font-size: 14px; }
+  .icon-btn { min-height: 44px; font-size: 12px; }
+}
