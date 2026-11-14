@@ -75,7 +75,7 @@ export const MODERN_QUESTIONS = [
 
   { id: "mtech-2-11", category: "Technology", difficulty: 2, question: "What does 'MR' stand for in mixed reality?", options: ["Mixed Reality", "Manual Rendering", "Minimal Reality", "Machine Reality"], answerIndex: 0 },
 
-  { id: "mtech-2-12", category: "Technology", difficulty: 2, question: "Which open-source text editor did GitHub launch?", options: ["Vim", "Notepad++", "Sublime", "VS Code"], answerIndex: 3 },
+  { id: "mtech-2-12", category: "Technology", difficulty: 2, question: "Which open-source code editor did Microsoft launch in 2015?", options: ["Vim", "Notepad++", "Sublime", "VS Code"], answerIndex: 3 },
 
   { id: "mtech-2-13", category: "Technology", difficulty: 2, question: "What does 'CI/CD' stand for?", options: ["Commit / Check / Deploy", "Continuous Integration / Continuous Deployment", "Code Inspect / Code Deliver", "Central Input / Central Delivery"], answerIndex: 1 },
 
@@ -147,7 +147,7 @@ export const MODERN_QUESTIONS = [
 
   { id: "mgam-1-01", category: "Video Games & Streaming", difficulty: 1, question: "Which studio developed Minecraft?", options: ["Rare", "Riot Games", "Mojang", "CD Projekt"], answerIndex: 2 },
 
-  { id: "mgam-1-02", category: "Video Games & Streaming", difficulty: 1, question: "Which 2017 battle royale earned a Guinness record and billions in revenue?", options: ["Fortnite", "PUBG", "Apex Legends", "DayZ"], answerIndex: 1 },
+  { id: "mgam-1-02", category: "Video Games & Streaming", difficulty: 1, question: "Which 2017 battle royale was developed by Bluehole (later PUBG Corp)?", options: ["Fortnite", "PUBG", "Apex Legends", "DayZ"], answerIndex: 1 },
 
   { id: "mgam-1-03", category: "Video Games & Streaming", difficulty: 1, question: "Which company publishes Fortnite?", options: ["EA", "Epic Games", "Activision", "Ubisoft"], answerIndex: 1 },
 
@@ -251,7 +251,7 @@ export const MODERN_QUESTIONS = [
 
   { id: "mgam-3-09", category: "Video Games & Streaming", difficulty: 3, question: "Which 2023 Counter-Strike release replaced Global Offensive?", options: ["Counter-Strike Next", "Counter-Strike 3", "Counter-Strike 2", "Counter-Strike Source"], answerIndex: 2 },
 
-  { id: "mgam-3-10", category: "Video Games & Streaming", difficulty: 3, question: "Which event first showed Unreal Engine 5's 'Lumen in the Land of Nanite'?", options: ["PAX 2020", "Epic's GDC 2020 showcase", "E3 2020", "The Game Awards 2020"], answerIndex: 1 },
+  { id: "mgam-3-10", category: "Video Games & Streaming", difficulty: 3, question: "Which company develops and owns Unreal Engine?", options: ["Unity Technologies", "Valve", "Microsoft", "Epic Games"], answerIndex: 3 },
 
   { id: "mgam-3-11", category: "Video Games & Streaming", difficulty: 3, question: "Which studio makes Path of Exile?", options: ["Epic Games", "Riot Games", "Bungie", "Grinding Gear Games"], answerIndex: 3 },
 
@@ -317,7 +317,7 @@ export const MODERN_QUESTIONS = [
 
   { id: "mfil-2-04", category: "Film & TV", difficulty: 2, question: "Which 2017 film tells a love story between a cleaner and a fish-man?", options: ["The Lobster", "The Neon Demon", "The Shape of Water", "Brightburn"], answerIndex: 2 },
 
-  { id: "mfil-2-05", category: "Film & TV", difficulty: 2, question: "Which 2017 Best Picture winner follows a Missouri mother demanding justice?", options: ["Three Billboards Outside Ebbing, Missouri", "The Favourite", "The Big Sick", "Lady Bird"], answerIndex: 0 },
+  { id: "mfil-2-05", category: "Film & TV", difficulty: 2, question: "Which 2017 film follows a Missouri mother demanding justice?", options: ["Three Billboards Outside Ebbing, Missouri", "The Favourite", "The Big Sick", "Lady Bird"], answerIndex: 0 },
 
   { id: "mfil-2-06", category: "Film & TV", difficulty: 2, question: "Which 2018 film ends with half the universe snapped away?", options: ["Thor: Ragnarok", "Infinity War", "Civil War", "Endgame"], answerIndex: 1 },
 
@@ -335,7 +335,7 @@ export const MODERN_QUESTIONS = [
 
   { id: "mfil-2-13", category: "Film & TV", difficulty: 2, question: "Which 2017 film follows a summer romance with Armie Hammer in Italy?", options: ["The Favourite", "Lady Bird", "Call Me by Your Name", "The Wife"], answerIndex: 2 },
 
-  { id: "mfil-2-14", category: "Film & TV", difficulty: 2, question: "Which 2019 film sends Daniel Craig into a donut-box murder case?", options: ["Detective Story", "Knives Out", "Glass Onion", "The Long Goodbye"], answerIndex: 1 },
+  { id: "mfil-2-14", category: "Film & TV", difficulty: 2, question: "Which 2019 film sends Daniel Craig into a family murder mystery?", options: ["Detective Story", "Knives Out", "Glass Onion", "The Long Goodbye"], answerIndex: 1 },
 
   { id: "mfil-2-15", category: "Film & TV", difficulty: 2, question: "Which 2018 black-and-white film follows a maid in Mexico City?", options: ["Y tu mamá también", "Roma", "Amores perros", "Bacurau"], answerIndex: 1 },
 
@@ -355,7 +355,7 @@ export const MODERN_QUESTIONS = [
 
   { id: "mfil-3-04", category: "Film & TV", difficulty: 3, question: "Which 2015 French film won the Palme d'Or for a Tamil refugee in Paris?", options: ["Love", "Carol", "Anomalisa", "Dheepan"], answerIndex: 3 },
 
-  { id: "mfil-3-05", category: "Film & TV", difficulty: 3, question: "Which Korean film won the 2012 Palme d'Or — 'Pietà'?", options: ["The Journals of Musashi", "The Poetry", "Pietà", "Mother"], answerIndex: 2 },
+  { id: "mfil-3-05", category: "Film & TV", difficulty: 3, question: "Which Korean film won the Golden Lion at the 2012 Venice Film Festival?", options: ["The Journals of Musashi", "The Poetry", "Pietà", "Mother"], answerIndex: 2 },
 
   { id: "mfil-3-06", category: "Film & TV", difficulty: 3, question: "Which 2023 French courtroom drama won the Palme d'Or?", options: ["Saint Omer", "The Zone of Interest", "Anatomy of a Fall", "Triangle of Sadness"], answerIndex: 2 },
 
@@ -365,7 +365,7 @@ export const MODERN_QUESTIONS = [
 
   { id: "mfil-3-09", category: "Film & TV", difficulty: 3, question: "Which 2014 film shot to look like one take won Best Picture?", options: ["Selma", "Whiplash", "Birdman", "Boyhood"], answerIndex: 2 },
 
-  { id: "mfil-3-10", category: "Film & TV", difficulty: 3, question: "Which Danish film won the 2022 Oscar for Best International Feature?", options: ["Drive My Car", "Flee", "Another Round", "A Twin Mirror"], answerIndex: 2 },
+  { id: "mfil-3-10", category: "Film & TV", difficulty: 3, question: "Which Danish film won the Oscar for Best International Feature at the 2021 Academy Awards?", options: ["Drive My Car", "Flee", "Another Round", "A Twin Mirror"], answerIndex: 2 },
 
   { id: "mfil-3-11", category: "Film & TV", difficulty: 3, question: "Which 2022 German film won the Oscar for Best International Feature?", options: ["All Quiet on the Western Front", "Close", "The Quiet Girl", "Argentina 1985"], answerIndex: 0 },
 
@@ -379,7 +379,7 @@ export const MODERN_QUESTIONS = [
 
   { id: "mfil-3-16", category: "Film & TV", difficulty: 3, question: "Which 2015 film gave Leonardo DiCaprio his lead Oscar?", options: ["The Great Gatsby", "J. Edgar", "The Wolf of Wall Street", "The Revenant"], answerIndex: 3 },
 
-  { id: "mfil-3-17", category: "Film & TV", difficulty: 3, question: "Which 2018 Palme d'Or follows a Tokyo convenience store manager?", options: ["Shoplifters", "Our Little Sister", "Asako I & II", "Maboroshi"], answerIndex: 0 },
+  { id: "mfil-3-17", category: "Film & TV", difficulty: 3, question: "Which 2018 film won the Palme d'Or and follows a Tokyo family living by shoplifting?", options: ["Shoplifters", "Our Little Sister", "Asako I & II", "Maboroshi"], answerIndex: 0 },
 
   { id: "mfil-3-18", category: "Film & TV", difficulty: 3, question: "Which 2019 film was the first non-English Best Picture winner at the Oscars?", options: ["Roma", "Shoplifters", "The Great Beauty", "Parasite"], answerIndex: 3 },
   { id: "mmus-1-01", category: "Music", difficulty: 1, question: "Which American singer released the album 'folklore' during lockdown in 2020?", options: ["Phoebe Bridgers", "Taylor Swift", "Lana Del Rey", "Lorde"], answerIndex: 1 },
@@ -408,7 +408,7 @@ export const MODERN_QUESTIONS = [
 
   { id: "mmus-1-13", category: "Music", difficulty: 1, question: "Which Billie Eilish song won Record and Song of the Year in 2020?", options: ["therefore i am", "everything i wanted", "ocean eyes", "bad guy"], answerIndex: 3 },
 
-  { id: "mmus-1-14", category: "Music", difficulty: 1, question: "Which Dua Lipa song ruled dance floors in 2020?", options: ["Don't Start Now", "New Rules", "Break My Heart", "Levitating"], answerIndex: 0 },
+  { id: "mmus-1-14", category: "Music", difficulty: 1, question: "Which Dua Lipa song was her biggest hit of 2020?", options: ["Don't Start Now", "New Rules", "Break My Heart", "Levitating"], answerIndex: 3 },
 
   { id: "mmus-1-15", category: "Music", difficulty: 1, question: "Which artist made 'Un Verano Sin Ti' one of the biggest Spanish language albums ever?", options: ["J Balvin", "Bad Bunny", "Ozuna", "Maluma"], answerIndex: 1 },
 
@@ -416,7 +416,7 @@ export const MODERN_QUESTIONS = [
 
   { id: "mmus-1-17", category: "Music", difficulty: 1, question: "Which artist released 'Formation' in 2016, days before her Super Bowl performance?", options: ["Cardi B", "Nicki Minaj", "Beyoncé", "Rihanna"], answerIndex: 2 },
 
-  { id: "mmus-1-18", category: "Music", difficulty: 1, question: "Which Post Malone song features Quavo (2017)?", options: ["Rockstar", "Circles", "Congratulations", "White Iverson"], answerIndex: 2 },
+  { id: "mmus-1-18", category: "Music", difficulty: 1, question: "Which Post Malone song features Quavo (2016)?", options: ["Rockstar", "Circles", "Congratulations", "White Iverson"], answerIndex: 2 },
 
   { id: "mmus-2-01", category: "Music", difficulty: 2, question: "Which Taylor Swift album features the songs 'ME!' and 'Lover'?", options: ["evermore", "folklore", "reputation", "Lover"], answerIndex: 3 },
 
@@ -434,7 +434,7 @@ export const MODERN_QUESTIONS = [
 
   { id: "mmus-2-08", category: "Music", difficulty: 2, question: "Which 2024 Beyoncé album mixes country, blues and rock?", options: ["4", "Lemonade", "Renaissance", "Cowboy Carter"], answerIndex: 3 },
 
-  { id: "mmus-2-09", category: "Music", difficulty: 2, question: "Which 2015 Kendrick Lamar album is a cinematic story of Compton?", options: ["To Pimp a Butterfly", "Mr. Morale & the Big Steppers", "DAMN.", "good kid, m.A.A.d city"], answerIndex: 0 },
+  { id: "mmus-2-09", category: "Music", difficulty: 2, question: "Which 2012 Kendrick Lamar album is a cinematic coming-of-age story of Compton?", options: ["To Pimp a Butterfly", "Mr. Morale & the Big Steppers", "DAMN.", "good kid, m.A.A.d city"], answerIndex: 3 },
 
   { id: "mmus-2-10", category: "Music", difficulty: 2, question: "Which Kendrick Lamar album won the 2018 Pulitzer Prize for Music?", options: ["good kid, m.A.A.d city", "DAMN.", "untitled unmastered", "To Pimp a Butterfly"], answerIndex: 1 },
 
@@ -470,7 +470,7 @@ export const MODERN_QUESTIONS = [
 
   { id: "mmus-3-07", category: "Music", difficulty: 3, question: "Which duo's album 'We Don't Trust You' featured 'Like That'?", options: ["Ye & Ty Dolla Sign", "Kendrick & Baby Keem", "Drake & PartyNextDoor", "Future & Metro Boomin"], answerIndex: 3 },
 
-  { id: "mmus-3-08", category: "Music", difficulty: 3, question: "Which October 2022 Taylor Swift album became the most-streamed album on Spotify?", options: ["Midnights", "Evermore", "TTPD", "Lover"], answerIndex: 0 },
+  { id: "mmus-3-08", category: "Music", difficulty: 3, question: "Which October 2022 Taylor Swift album broke Spotify's record for most-streamed album in a single day?", options: ["Midnights", "Evermore", "TTPD", "Lover"], answerIndex: 0 },
 
   { id: "mmus-3-09", category: "Music", difficulty: 3, question: "Which Kanye West album from 2018 is exactly seven tracks long?", options: ["808s & Heartbreak", "ye", "Graduation", "Donda"], answerIndex: 1 },
 
@@ -486,11 +486,11 @@ export const MODERN_QUESTIONS = [
 
   { id: "mmus-3-15", category: "Music", difficulty: 3, question: "Which Taylor Swift song from 'Lover' went viral years later?", options: ["Cruel Summer", "All Too Well", "Delicate", "Anti-Hero"], answerIndex: 0 },
 
-  { id: "mmus-3-16", category: "Music", difficulty: 3, question: "Which 2023 single by Sabrina Carpenter became her breakthrough?", options: ["Emails I Can't Send", "Espresso", "Please Please Please", "Nonsense"], answerIndex: 1 },
+  { id: "mmus-3-16", category: "Music", difficulty: 3, question: "Which 2024 single by Sabrina Carpenter became her breakthrough?", options: ["Emails I Can't Send", "Espresso", "Please Please Please", "Nonsense"], answerIndex: 1 },
 
   { id: "mmus-3-17", category: "Music", difficulty: 3, question: "Which 2024 Sabrina Carpenter album launched 'Espresso'?", options: ["emails i can't send", "Short n' Sweet", "singular: act one", "GUTS"], answerIndex: 1 },
 
-  { id: "mmus-3-18", category: "Music", difficulty: 3, question: "Which 2024 Chappell Roan song became a gay anthem?", options: ["Pink Pony Club", "Good Luck, Babe!", "Hot to Go!", "The Subway"], answerIndex: 1 },
+  { id: "mmus-3-18", category: "Music", difficulty: 3, question: "Which 2024 Chappell Roan single became her breakout international hit?", options: ["Pink Pony Club", "Good Luck, Babe!", "Hot to Go!", "Casual"], answerIndex: 1 },
   { id: "mspo-1-01", category: "Sport", difficulty: 1, question: "Which country won the 2022 FIFA World Cup in Qatar?", options: ["France", "Argentina", "Brazil", "Germany"], answerIndex: 1 },
 
   { id: "mspo-1-02", category: "Sport", difficulty: 1, question: "Which country won the 2018 FIFA World Cup in Russia?", options: ["Belgium", "France", "Germany", "Croatia"], answerIndex: 1 },
@@ -499,7 +499,7 @@ export const MODERN_QUESTIONS = [
 
   { id: "mspo-1-04", category: "Sport", difficulty: 1, question: "Which country won the 2020 European Championship (played in 2021)?", options: ["France", "England", "Portugal", "Italy"], answerIndex: 3 },
 
-  { id: "mspo-1-05", category: "Sport", difficulty: 1, question: "Who is the all-time top scorer at FIFA World Cups?", options: ["Miroslav Klose", "Gerd Müller", "Ronaldo (Brazil)", "Lionel Messi"], answerIndex: 3 },
+  { id: "mspo-1-05", category: "Sport", difficulty: 1, question: "Which French forward became the FIFA World Cup all-time top scorer in 2026?", options: ["Kylian Mbappé", "Lionel Messi", "Miroslav Klose", "Ronaldo (Brazil)"], answerIndex: 0 },
 
   { id: "mspo-1-06", category: "Sport", difficulty: 1, question: "Which city hosted the 2024 Summer Olympics?", options: ["Tokyo", "London", "Los Angeles", "Paris"], answerIndex: 3 },
 
@@ -535,7 +535,7 @@ export const MODERN_QUESTIONS = [
 
   { id: "mspo-2-10", category: "Sport", difficulty: 2, question: "Which NBA team won the 2023 championship for its first ever title?", options: ["LA Lakers", "Golden State Warriors", "Denver Nuggets", "Boston Celtics"], answerIndex: 2 },
 
-  { id: "mspo-2-11", category: "Sport", difficulty: 2, question: "Which golfer won The Masters back-to-back in 2022 and 2023?", options: ["Xander Schauffele", "Rory McIlroy", "Scottie Scheffler", "Jon Rahm"], answerIndex: 2 },
+  { id: "mspo-2-11", category: "Sport", difficulty: 2, question: "Which golfer won The Masters in both 2022 and 2024?", options: ["Xander Schauffele", "Rory McIlroy", "Scottie Scheffler", "Jon Rahm"], answerIndex: 2 },
 
   { id: "mspo-2-12", category: "Sport", difficulty: 2, question: "Which 2024 event had Spain defeat England 2-1 in the final in Berlin?", options: ["FIFA World Cup 2022", "Copa América 2024", "UEFA Euro 2024", "AFCON 2024"], answerIndex: 2 },
 
@@ -565,7 +565,7 @@ export const MODERN_QUESTIONS = [
 
   { id: "mgeo-1-02", category: "Geography", difficulty: 1, question: "Which North American country has the largest population?", options: ["USA", "Guatemala", "Canada", "Mexico"], answerIndex: 0 },
 
-  { id: "mgeo-1-03", category: "Geography", difficulty: 1, question: "Which capital city lies the farthest north?", options: ["Reykjavík", "Tallinn", "Helsinki", "Oslo"], answerIndex: 0 },
+  { id: "mgeo-1-03", category: "Geography", difficulty: 1, question: "Which of these fully sovereign-state capital cities lies the farthest north?", options: ["Reykjavík", "Tallinn", "Helsinki", "Oslo"], answerIndex: 0 },
 
   { id: "mgeo-1-04", category: "Geography", difficulty: 1, question: "Which European country is NOT in the EU?", options: ["Greece", "Spain", "Poland", "Switzerland"], answerIndex: 3 },
 
@@ -671,7 +671,7 @@ export const MODERN_QUESTIONS = [
 
   { id: "mart-1-03", category: "Arts & Literature", difficulty: 1, question: "Who wrote 'The Hunger Games' trilogy?", options: ["Suzanne Collins", "Rick Riordan", "Scott Westerfeld", "Veronica Roth"], answerIndex: 0 },
 
-  { id: "mart-1-04", category: "Arts & Literature", difficulty: 1, question: "Which painting sold for $450 million at Christie's in 2017?", options: ["Interchange", "The Card Players", "Salvator Mundi (Da Vinci)", "Salvator Mundi (Leonardo-attributed)"], answerIndex: 3 },
+  { id: "mart-1-04", category: "Arts & Literature", difficulty: 1, question: "Which painting, attributed to Leonardo da Vinci, sold for $450 million at Christie's in 2017?", options: ["Interchange", "Salvator Mundi", "The Card Players", "Portrait of Adele Bloch-Bauer I"], answerIndex: 1 },
 
   { id: "mart-1-05", category: "Arts & Literature", difficulty: 1, question: "Who wrote 'Sapiens' (2011)?", options: ["Malcolm Gladwell", "Jordan Peterson", "James Clear", "Yuval Noah Harari"], answerIndex: 3 },
 
