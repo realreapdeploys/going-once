@@ -58,6 +58,7 @@ function tagStrip(state) {
         {
           class: cx("tag", current && "tag--current", kind && `tag--${kind}`, lot.isHammer && "tag--hammer"),
           "aria-label": `Lot ${i + 1}${record ? `, ${kind}` : current ? ", current" : ""}${lot.isHammer ? ", the Hammer" : ""}`,
+          title: `Lot ${i + 1}${record ? ` — ${kind}` : current ? ", current" : ""}${lot.isHammer ? " — the Hammer" : ""}`,
           "aria-current": current ? "step" : null,
         },
         h("span", { "aria-hidden": "true" }, glyph || String(i + 1)),
@@ -575,7 +576,15 @@ export function lotScreen(app, handlers) {
         { class: "lot__left", "aria-labelledby": "lot-title" },
         h("h1", { id: "lot-title", class: "visually-hidden" }, `Lot ${state.lotIndex + 1}: ${lot.category}, ${difficultyLabel(lot.difficulty)}`),
         lotPlate(state),
-        auctioneerLine(""),
+        auctioneerLine(
+          phase === "bidding"
+            ? "The room expects your paddle — or a courteous pass."
+            : phase === "answering"
+              ? "Bid once, name it right, and the lot is yours."
+              : phase === "stealing"
+                ? "Another buyer may claim the lot — at half price, if they dare."
+                : "",
+        ),
         questionPanel(state, app, handlers),
         timerBar(),
         phase === "stealing"
