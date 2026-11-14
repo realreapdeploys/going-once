@@ -27,11 +27,12 @@ test("ranks and progress", () => {
   assert.equal(rankProgress(5000).fraction, 1);
 });
 
-test("paddles unlock with rank", () => {
+test("paddles unlock with rank, and the laurel paddle with badges", () => {
   assert.equal(unlockedPaddles(0).length, 1);
   assert.equal(unlockedPaddles(300).length, 3);
-  assert.equal(unlockedPaddles(99999).length, PADDLES.length);
-  assert.equal(PADDLES.length, RANKS.length);
+  assert.equal(unlockedPaddles(99999, 0).length, PADDLES.length - 1); // laurel still locked
+  assert.equal(unlockedPaddles(99999, 3).length, PADDLES.length); // 3 badges: laurel unlocks
+  assert.equal(PADDLES.length, RANKS.length + 1); // rank paddles plus the badge paddle
 });
 
 test("applyFinishedGame builds a streak, records history, and is idempotent per date", () => {
