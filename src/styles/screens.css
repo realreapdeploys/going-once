@@ -842,6 +842,8 @@
 
 .standing--you td {
   border-bottom: 2px solid var(--brass);
+  background: color-mix(in srgb, var(--brass) 10%, transparent);
+  padding-bottom: 9px;
 }
 
 .standing__who {
@@ -1283,3 +1285,109 @@
 .rival--sunk {
   filter: grayscale(0.55);
 }
+
+/* ---------------------------------------------------------- lot grid strip */
+.lotgrid {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 4px;
+  padding: 14px 18px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  box-shadow: 3px 3px 0 var(--shadow);
+}
+.lotgrid__cell {
+  width: 40px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.lotgrid__cell--won { background: var(--brass); color: var(--ink); border-color: var(--ink); }
+.lotgrid__cell--stole { background: #2f4a2f; color: var(--paper); }
+.lotgrid__cell--lost { background: var(--oxblood); color: var(--paper); }
+.lotgrid__cell--pass { border-style: dashed; border-color: var(--ink-soft); color: var(--ink-soft); }
+
+/* ---------------------------------------------------------- badges */
+.badges { padding: 18px; }
+.badges__row { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 10px; }
+.badge { display: flex; align-items: center; gap: 12px; margin: 0; max-width: 320px; }
+.badge__seal {
+  width: 64px;
+  height: 64px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--oxblood);
+  border-radius: 50%;
+  transform: rotate(var(--tilt, -3deg));
+  position: relative;
+}
+.badge__ink {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 42%, var(--oxblood) 0 58%, transparent 59%),
+    radial-gradient(circle at 50% 50%, transparent 0 70%, var(--oxblood) 71% 74%, transparent 75%);
+  display: grid;
+  place-items: center;
+}
+.badge__ink::after {
+  content: "✦";
+  color: var(--paper);
+  font-size: 18px;
+  line-height: 1;
+}
+.badge__name { font-family: var(--font-display); font-size: 18px; margin: 0 0 2px; }
+.badge__blurb { font-size: 13px; color: var(--ink-soft); margin: 0; }
+
+/* ---------------------------------------------------------- patter */
+.patter { padding: 16px 18px; border-left: 4px solid var(--brass); }
+.patter__quote { font-size: 19px; line-height: 1.5; margin: 6px 0 8px; font-family: var(--font-body); font-style: italic; }
+.patter__who { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); margin: 0; }
+
+/* ---------------------------------------------------------- ripple: streak at risk */
+.cover__streakrisk {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 640px;
+  margin: 0 auto 18px;
+  padding: 12px 16px;
+  border: 1.5px solid var(--oxblood);
+  background: var(--paper);
+  box-shadow: 3px 3px 0 var(--shadow);
+  border-radius: 4px;
+}
+.cover__streakrisk p { margin: 0; font-size: 15px; }
+.cover__streakrisk-icon { flex: none; color: var(--oxblood); display: grid; place-items: center; }
+
+/* ---------------------------------------------------------- ledger glyph cells */
+.lotglyph { font-family: var(--font-mono); font-size: 13px; letter-spacing: 2px; white-space: nowrap; }
+.lotglyph--won { color: var(--brass-text); }
+.lotglyph--stole { color: #2f4a2f; }
+.lotglyph--lost { color: var(--oxblood); }
+.lotglyph--pass { color: var(--ink-soft); }
+
+/* ---------------------------------------------------------- lifetime scorecard */
+.scorecard { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 10px; }
+.scorecard__cell { border: 1px solid var(--rule); background: var(--paper); padding: 10px 12px; }
+.scorecard__num { font-family: var(--font-mono); font-size: 22px; font-weight: 700; margin: 2px 0; font-variant-numeric: tabular-nums; }
+.scorecard__hint { font-size: 12px; color: var(--ink-soft); }
+
+/* locked badge + badge grid */
+.badgegrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 8px; }
+.badgeslot { border: 1px solid var(--rule); padding: 10px 12px; background: var(--paper); display: flex; gap: 10px; align-items: center; }
+.badgeslot__seal { width: 34px; height: 34px; flex: none; border: 1.5px solid var(--ink-soft); border-radius: 50%; display: grid; place-items: center; font-size: 15px; color: var(--ink-soft); }
+.badgeslot--earned .badgeslot__seal { border-color: var(--oxblood); color: var(--oxblood); }
+.badgeslot__name { font-size: 13px; font-weight: 700; margin: 0 0 2px; }
+.badgeslot__hint { font-size: 12px; color: var(--ink-soft); margin: 0; }
+.badgeslot--earned .badgeslot__hint { color: var(--brass-text); }
