@@ -55,7 +55,7 @@ export function animate(el, keyframes, options) {
 }
 
 /** Stamp lands: scale 1.7 to 1 with a settle. */
-export function stampIn(el) {
+export function stampIn(el, delay = 0) {
   animate(
     el,
     [
@@ -64,7 +64,7 @@ export function stampIn(el) {
       { transform: `rotate(var(--tilt,-3deg)) scale(1.03)`, offset: 0.8 },
       { transform: `rotate(var(--tilt,-3deg)) scale(1)`, opacity: 1 },
     ],
-    { duration: 300, easing: "ease-in", fill: "none" },
+    { duration: 300, delay, easing: "ease-in", fill: "backwards" },
   );
 }
 
