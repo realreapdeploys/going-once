@@ -209,14 +209,14 @@ export function mixedLadder(lotCount) {
  * difficulty: "easy" | "medium" | "hard" | "mixed"
  */
 export function roomLadder(lotCount, difficulty = "mixed") {
-  const size = Math.max(2, Math.min(12, Math.floor(lotCount) || 7));
+  const size = Math.max(2, Math.min(24, Math.floor(lotCount) || 7));
   const fill = difficulty === "easy" ? 1 : difficulty === "medium" ? 2 : difficulty === "hard" ? 3 : null;
   return fill ? Array.from({ length: size }, () => fill) : mixedLadder(size);
 }
 
 export function createRoomGame(seed, { lotCount = 7, difficulty = "mixed" } = {}, questions = QUESTIONS, roster = ROSTER) {
   if (!seed || typeof seed !== "string") throw new EngineError("BAD_SEED", "A room seed is required");
-  const count = Math.max(2, Math.min(12, Math.floor(lotCount) || 7));
+  const count = Math.max(2, Math.min(24, Math.floor(lotCount) || 7));
   const rng = mulberry32(hashString(`going-once-room:${seed}`));
   const day = buildDayInternal(
     {
