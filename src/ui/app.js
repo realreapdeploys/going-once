@@ -3,6 +3,7 @@
 
 import {
   createGame,
+  createRoomGame,
   reduce,
   replay,
   bidBounds,
@@ -60,7 +61,7 @@ import { roomSetupScreen, roomLobbyScreen, roomStandingsScreen } from "./room-sc
 import { coverScreen } from "./cover.js";
 import { lotScreen, roomStrip, attachLotHelpers } from "./lot.js";
 import { resultsScreen } from "./results.js";
-import { openHowToPlay, openLedger, openConfirm, isModalOpen } from "./modals.js";
+import { openHowToPlay, openLedger, openConfirm, openEndless, isModalOpen } from "./modals.js";
 
 const STAMP_TILT = (seed) => ({ "--tilt": `${tiltFor(seed, 4)}deg` });
 
@@ -92,6 +93,8 @@ export function startApp({ root, devDate = null } = {}) {
     setup: null,
     roomHost: null,
     roomMySeat: null,
+    endless: false,
+    endlessLots: null,
     roomLockedBid: null,
     roomLockedSeen: null,
     roomBidSeen: null,
@@ -203,6 +206,7 @@ export function startApp({ root, devDate = null } = {}) {
 
   function persist() {
     if (app.roomClient) return; // a room sale never touches the daily save
+    if (app.endless) return; // an evening table is never recorded either
     if (!app.state) {
       store.saveProfile(app.profile);
       return;
@@ -240,6 +244,36 @@ export function startApp({ root, devDate = null } = {}) {
     app.revealDone = false;
     app.bid = 0;
     persist();
+  }
+
+  function startEndless(lotCount) {
+    sound.unlock();
+    sound.play("flick");
+    app.endless = true;
+    app.endlessLots = Math.max(7, Math.min(20, Math.floor(lotCount) || 10));
+    app.state = createRoomGame(
+      `evening-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e9).toString(36)}`,
+      { lotCount: app.endlessLots, difficulty: "mixed" },
+    );
+    app.actions = [];
+    app.timer = null;
+    app.selection = null;
+    app.stealStage = false;
+    app.revealDone = false;
+    app.bid = 0;
+    app.screen = "lot";
+    render();
+  }
+
+  function exitEndless() {
+    app.endless = false;
+    app.endlessLots = null;
+    app.state = null;
+    app.actions = [];
+    app.timer = null;
+    loadAll();
+    app.screen = "cover";
+    render();
   }
 
   /* ---------------------------------------------------------------- live region */
@@ -303,6 +337,7 @@ export function startApp({ root, devDate = null } = {}) {
     return coverScreen(app, {
       onStart: () => startOrResume(),
       onPrivateRoom: () => openPrivateRoom(),
+      onEndless: () => openEndless(app, null),
       onHowTo: (opener) => openHowToPlay(app, opener),
       onLedger: (opener) => openLedger(app, opener),
       onSound: toggleSound,
@@ -742,6 +777,10 @@ export function startApp({ root, devDate = null } = {}) {
     /* ---------------------------------------------------------------- results */
 
   function finishGame() {
+    if (app.endless) {
+      app.lastResult = { gained: 0, rankedUp: false, newPaddles: [], newAchievements: [], endless: true };
+      return;
+    }
     if (app.roomClient) return; // room sales never touch daily saves
     if (!app.state || app.state.phase !== "finished") return;
     const already = app.profile.history.some((entry) => entry.date === app.today);
@@ -771,6 +810,8 @@ export function startApp({ root, devDate = null } = {}) {
       onHowTo: (opener) => openHowToPlay(app, opener),
       onLedger: (opener) => openLedger(app, opener),
       onSound: toggleSound,
+      onAgain: () => startEndless(app.endlessLots || 10),
+      onHome: () => exitEndless(),
       onPlayNew: () => {
         app.today = localDateString();
         app.state = null;
@@ -902,6 +943,8 @@ export function startApp({ root, devDate = null } = {}) {
   app.announce = announce;
   app.persist = persist;
   app.persistProfile = persistProfile;
+  app.startEndless = startEndless;
+  app.exitEndless = exitEndless;
   app.applyPaddle = applyPaddle;
   app.STAMP_TILT = STAMP_TILT;
   app.loadAll = loadAll;
