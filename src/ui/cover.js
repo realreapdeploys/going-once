@@ -1,7 +1,7 @@
 // Going Once: the cover. The catalogue front page: wordmark, sale line, tonight's bidders, and the
 // one button that matters.
 
-import { saleNumber, createGame, rivalTell } from "../engine.js";
+import { saleNumber, createGame, rivalTell, addDays } from "../engine.js";
 import { getRivalById, describeSkills } from "../roster.js";
 import { displayStreak, rankFor, rankProgress } from "../progress.js";
 import { formatChips, longDate, formatCountdown, msUntilMidnight, surnameOf } from "../format.js";
@@ -98,6 +98,7 @@ export function coverScreen(app, handlers) {
   const finished = Boolean(app.state && app.state.phase === "finished") || profile.history.some((e) => e.date === today);
   const inProgress = Boolean(app.state && app.state.phase !== "finished");
   const streak = displayStreak(profile, today);
+  const atRisk = !finished && streak > 0 && profile.lastCompletedDate === addDays(today, -1);
   const rank = rankFor(profile.reputation);
   const progress = rankProgress(profile.reputation);
   const rivals = app.state ? app.state.rivals : createGame(today).rivals;
@@ -112,6 +113,19 @@ export function coverScreen(app, handlers) {
   );
 
   const buttonLabel = finished ? "See today's result" : inProgress ? "Resume the sale" : "Take a paddle";
+
+  const streakRisk = atRisk
+    ? h(
+        "div",
+        { class: "cover__streakrisk", role: "status" },
+        h("span", {
+          class: "cover__streakrisk-icon",
+          "aria-hidden": "true",
+          html: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.7 3.6 3.4 4.6 4.7 7.5a4.9 4.9 0 0 1-1 5.7 4.6 4.6 0 0 1-6.9.3 5.6 5.6 0 0 1-1-6.1c1.5-1.3 1.2-3.4 4.2-7.4z"/></svg>',
+        }),
+        h("p", null, `${streak === 1 ? "You've played 1 day running" : `You've played ${streak} days running`} — today's sale keeps the streak alive.`),
+      )
+    : null;
 
   const cta = h(
     "div",
@@ -181,12 +195,12 @@ export function coverScreen(app, handlers) {
     h("p", { class: "cover__fine" }, "Seven lots. Three rivals. One thousand chips. Everyone gets the same sale."),
   );
 
-  const body = h("main", { id: "main", class: "sheet cover" }, header, cta, bidders, footer);
+  const body = h("main", { id: "main", class: "sheet cover" }, header, streakRisk, cta, bidders, footer);
 
   return {
     body,
     after: () => {
-      anim.staggerIn(body, ":scope > header, :scope > .cover__cta, :scope > section, :scope > footer");
+      anim.staggerIn(body, ":scope > header, :scope > .cover__streakrisk, :scope > .cover__cta, :scope > section, :scope > footer");
     },
   };
 }
