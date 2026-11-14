@@ -1,8 +1,9 @@
-// Going Once: results. "The Sale Closes": standings, reputation, the five lots as a ledger, share.
+// Going Once: results. "The Sale Closes": standings, reputation, the seven lots as a ledger, share.
 
 import { saleNumber, outcomeKind, playerRank, localDateString } from "../engine.js";
-import { rankFor, rankProgress, PADDLES } from "../progress.js";
+import { rankFor, rankProgress, PADDLES, ACHIEVEMENTS } from "../progress.js";
 import { formatChips, ordinal, signedChips, deltaLabel, difficultyLabel, formatCountdown, msUntilMidnight, surnameOf } from "../format.js";
+import { getRivalById } from "../roster.js";
 import { h, cx } from "./dom.js";
 import { portraitMarkup, portraitLabel } from "./portrait.js";
 import { paddle, paddleSvg } from "./paddle.js";
@@ -78,7 +79,7 @@ function reputationPlate(app) {
     h(
       "p",
       { class: "reputation__hint" },
-      progress.next ? `${rank.title}. ${formatChips(progress.next.at - profile.reputation)} to ${progress.next.title}.` : `${rank.title}. Top of the room.`,
+      progress.next ? `${rank.title} · ${formatChips(progress.into)} of ${formatChips(progress.span)} to ${progress.next.title}.` : `${rank.title}. Top of the room.`,
     ),
     h("p", { class: "reputation__streak" }, `Streak: ${profile.streak === 1 ? "1 sale" : `${profile.streak} sales`}.`),
     result.rankedUp ? h("p", { class: "reputation__promo" }, h("span", { class: "stamp stamp--gain" }, `Promoted to ${rank.title}`)) : null,
@@ -176,7 +177,7 @@ function lotLedger(state) {
   return h(
     "section",
     { class: "lots plate", "aria-labelledby": "lots-title" },
-    h("h2", { id: "lots-title", class: "label" }, "The five lots"),
+    h("h2", { id: "lots-title", class: "label" }, "The seven lots"),
     h(
       "table",
       { class: "ledger lotledger-table" },
@@ -196,6 +197,70 @@ function lotLedger(state) {
       ),
       h("tbody", null, rows),
     ),
+  );
+}
+
+function achievementsPlate(app) {
+  const result = app.lastResult || { newAchievements: [] };
+  const ids = result.newAchievements || [];
+  if (!ids.length) return null;
+  const earned = ids.map((id) => ACHIEVEMENTS.find((a) => a.id === id)).filter(Boolean);
+  return h(
+    "section",
+    { class: "badges plate plate--paper", "aria-labelledby": "badges-title" },
+    h("h2", { id: "badges-title", class: "label" }, earned.length > 1 ? "Badges earned today" : "Badge earned today"),
+    h(
+      "div",
+      { class: "badges__row" },
+      earned.map((a) =>
+        h(
+          "figure",
+          { class: "badge", "data-badge": a.id },
+          h("span", { class: "badge__seal", "aria-hidden": "true" }, h("span", { class: "badge__ink" })),
+          h("figcaption", null, h("p", { class: "badge__name" }, a.name), h("p", { class: "badge__blurb" }, a.blurb)),
+        ),
+      ),
+    ),
+  );
+}
+
+function lotGrid(state) {
+  return h(
+    "div",
+    { class: "lotgrid", role: "group", "aria-label": "The seven lots, in order" },
+    state.lots.map((lot, i) => {
+      const record = state.history[i];
+      const kind = record ? outcomeKind(record) : "pass";
+      const words = { won: "won", stole: "won on the steal", lost: "lost", pass: "passed in" };
+      return h(
+        "span",
+        {
+          class: cx("lotgrid__cell", `lotgrid__cell--${kind}`),
+          "aria-label": `Lot ${i + 1}, ${words[kind]}`,
+          "aria-hidden": "false",
+        },
+        h("span", { "aria-hidden": "true" }, String(i + 1)),
+      );
+    }),
+  );
+}
+
+function patterPlate(state) {
+  const myRank = playerRank(state);
+  const topRival = state.final
+    .filter((r) => r.id !== "player")
+    .slice()
+    .sort((a, b) => b.chips - a.chips)[0];
+  if (!topRival) return null;
+  const rival = getRivalById(topRival.id);
+  const line = rival && rival.patter ? (myRank === 1 ? rival.patter.beaten : rival.patter.victorious) : null;
+  if (!line) return null;
+  return h(
+    "section",
+    { class: "patter plate plate--paper", role: "note" },
+    h("p", { class: "label" }, "Word from the room"),
+    h("p", { class: "patter__quote italic" }, `“${line}”`),
+    h("p", { class: "patter__who" }, `${rival.name} · ${ordinal(topRival.rank)} of ${state.final.length}`),
   );
 }
 
@@ -277,7 +342,10 @@ export function resultsScreen(app, handlers) {
       h("section", { class: "results__standings plate", "aria-labelledby": "standings-title" }, h("h2", { id: "standings-title", class: "label" }, "Final standings"), standingsTable(state, app)),
       reputationPlate(app),
     ),
+    achievementsPlate(app),
+    lotGrid(state),
     lotLedger(state),
+    patterPlate(state),
     h(
       "footer",
       { class: "results__foot" },
@@ -295,7 +363,8 @@ export function resultsScreen(app, handlers) {
   return {
     body,
     after: () => {
-      anim.staggerIn(body, ":scope > header, :scope > .results__grid, :scope > section, :scope > footer");
+      anim.staggerIn(body, ":scope > header, :scope > .results__grid, :scope > .badges, :scope > .lotgrid, :scope > .patter, :scope > section, :scope > footer");
+      body.querySelectorAll(".badge__ink").forEach((el, i) => anim.stampIn(el, 120 + i * 160));
       const rep = body.querySelector("[data-rep]");
       const result = app.lastResult || { gained: 0 };
       anim.tweenNumber(rep, 0, result.gained, { duration: 800, format: (n) => `+${formatChips(n)}` });
