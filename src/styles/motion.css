@@ -54,3 +54,74 @@
     opacity: 0.4;
   }
 }
+
+/* ---------------------------------------------------------- motion pass */
+@keyframes sheetIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.sheet { animation: sheetIn 340ms var(--ease) backwards; }
+
+.sheet--exit { animation: sheetOut 220ms ease-in forwards; }
+@keyframes sheetOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(-26px); }
+}
+
+@keyframes panelIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.qpanel, .steal, .lotledger, .lotgrid { animation: panelIn 380ms var(--ease) backwards; }
+
+.options .option { animation: optionIn 420ms var(--ease) backwards; }
+.options .option:nth-child(1) { animation-delay: 70ms; }
+.options .option:nth-child(2) { animation-delay: 150ms; }
+.options .option:nth-child(3) { animation-delay: 230ms; }
+.options .option:nth-child(4) { animation-delay: 310ms; }
+@keyframes optionIn {
+  from { opacity: 0; transform: translateX(-14px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.option { transition: background 140ms var(--ease), color 140ms var(--ease), transform 140ms var(--ease); }
+.option:not([aria-disabled="true"]):active { transform: scale(0.985); }
+
+.standing { animation: optionIn 340ms var(--ease) backwards; }
+.standing:nth-child(1) { animation-delay: 60ms; }
+.standing:nth-child(2) { animation-delay: 130ms; }
+.standing:nth-child(3) { animation-delay: 200ms; }
+.standing:nth-child(4) { animation-delay: 270ms; }
+.standing:nth-child(5) { animation-delay: 340ms; }
+.standing:nth-child(6) { animation-delay: 410ms; }
+.standing:nth-child(7) { animation-delay: 480ms; }
+.standing:nth-child(8) { animation-delay: 550ms; }
+.standing:nth-child(9) { animation-delay: 620ms; }
+.standing:nth-child(10) { animation-delay: 690ms; }
+
+@keyframes cellPop {
+  from { opacity: 0; transform: scale(0.4); }
+  to { opacity: 1; transform: scale(1); }
+}
+.lotgrid__cell { animation: cellPop 380ms var(--ease) backwards; }
+.lotgrid__cell:nth-child(1) { animation-delay: 120ms; }
+.lotgrid__cell:nth-child(2) { animation-delay: 190ms; }
+.lotgrid__cell:nth-child(3) { animation-delay: 260ms; }
+.lotgrid__cell:nth-child(4) { animation-delay: 330ms; }
+.lotgrid__cell:nth-child(5) { animation-delay: 400ms; }
+.lotgrid__cell:nth-child(6) { animation-delay: 470ms; }
+.lotgrid__cell:nth-child(7) { animation-delay: 540ms; }
+
+@keyframes badgeStamp {
+  from { opacity: 0; transform: rotate(var(--tilt, -3deg)) scale(1.6); }
+  to { opacity: 1; transform: rotate(var(--tilt, -3deg)) scale(1); }
+}
+.badge__seal { animation: badgeStamp 340ms ease-in backwards; }
+.badge:nth-child(2) .badge__seal { animation-delay: 150ms; }
+.badge:nth-child(3) .badge__seal { animation-delay: 300ms; }
+
+.cover__streakrisk { animation: panelIn 400ms 120ms var(--ease) backwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet, .options .option, .standing, .lotgrid__cell, .badge__seal, .cover__streakrisk { animation: none; }
+}
