@@ -23,6 +23,11 @@ export const ROSTER = Object.freeze([
   {
     id: "venn",
     name: "Captain Orla Venn",
+    patter: {
+      beaten: "Fair bidding. You keep your head at altitude — no stalling, no panic.",
+      victorious: "I've landed this auction a hundred times. I don't miss on clear air.",
+    },
+
     title: "Retired airline pilot",
     tagline: "Has been everywhere and remembers all of it. Bids when she is sure.",
     boldness: 0.5,
@@ -43,6 +48,11 @@ export const ROSTER = Object.freeze([
   {
     id: "marlowe",
     name: "Dex Marlowe",
+    patter: {
+      beaten: "Ha! Someone finally bid like they meant it. The table's awake again.",
+      victorious: "You didn't see the tell, but I bid anyway. That's the theatre, friend.",
+    },
+
     title: "Professional gambler",
     tagline: "Bids big on anything. Half of it is theatre.",
     boldness: 0.95,
@@ -62,6 +72,11 @@ export const ROSTER = Object.freeze([
   {
     id: "whitlock",
     name: "Prof. Ada Whitlock",
+    patter: {
+      beaten: "You outbid a historian with a colder head than mine. I tip my hat, sir.",
+      victorious: "Methodical wins the day. It nearly always does.",
+    },
+
     title: "Lecturer in history",
     tagline: "Slow, careful and rarely wrong. Hates to lose chips.",
     boldness: 0.2,
@@ -82,6 +97,11 @@ export const ROSTER = Object.freeze([
   {
     id: "reyes",
     name: "Tommy Reyes",
+    patter: {
+      beaten: "And the paddle goes up! What a moment! The whole room felt that one!",
+      victorious: "Tough luck, champ! That's sport! Back on the screens we go!",
+    },
+
     title: "Radio sports commentator",
     tagline: "Talks the whole time. Knows sport and screens, bluffs on the rest.",
     boldness: 0.7,
@@ -103,6 +123,11 @@ export const ROSTER = Object.freeze([
   {
     id: "ricci",
     name: "Madame Solène Ricci",
+    patter: {
+      beaten: "You hear the room better than I do today. That is worth more than money.",
+      victorious: "I only ever buy what sings to me. Today it sang.",
+    },
+
     title: "Antiques dealer",
     tagline: "Buys with her ears. Strong on music and the past, lost on science.",
     boldness: 0.6,
@@ -123,6 +148,11 @@ export const ROSTER = Object.freeze([
   {
     id: "finch",
     name: "Mr. Harold Finch",
+    patter: {
+      beaten: "Well played. A tidy sale to you. I shall keep the books in order.",
+      victorious: "Slow and steady, as the ledger always reads. No headroom for regret.",
+    },
+
     title: "Retired accountant",
     tagline: "Knows a little of everything. Never bids more than he can afford to lose.",
     boldness: 0.1,
@@ -193,6 +223,7 @@ export function registerRoomSeats(seats) {
       name: seat.name,
       title: "A guest at the table",
       tagline: "Playing with you, not against the house.",
+      patter: { beaten: "Good sale. The table was lively today.", victorious: "Good sale to the house." },
       boldness: 0.5,
       bluff: 0.1,
       skills: { ...ROOM_SKILLS },
