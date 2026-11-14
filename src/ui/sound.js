@@ -16,6 +16,11 @@ function ensureContext() {
   return context;
 }
 
+
+function woodblock(ctx, { frequency = 900, seconds = 0.05, gain = 0.18, delay = 0 }) {
+  tone(ctx, { type: "square", from: frequency, seconds, gain, delay });
+}
+
 function noiseBuffer(ctx, seconds) {
   const length = Math.max(1, Math.floor(ctx.sampleRate * seconds));
   const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
@@ -72,6 +77,38 @@ export function play(name) {
         break;
       case "flick":
         burst(ctx, { seconds: 0.04, type: "highpass", frequency: 2400, gain: 0.25 });
+        break;
+      case "click":
+        burst(ctx, { seconds: 0.02, type: "bandpass", frequency: 3400, gain: 0.09 });
+        break;
+      case "chips": {
+        tone(ctx, { type: "sine", from: 2093, seconds: 0.05, gain: 0.12 });
+        tone(ctx, { type: "sine", from: 2637, seconds: 0.05, gain: 0.09, delay: 0.045 });
+        tone(ctx, { type: "sine", from: 3136, seconds: 0.06, gain: 0.07, delay: 0.09 });
+        break;
+      }
+      case "ruler-tick":
+        burst(ctx, { seconds: 0.012, type: "highpass", frequency: 5200, gain: 0.07 });
+        tone(ctx, { type: "sine", from: 3600, seconds: 0.02, gain: 0.03 });
+        break;
+      case "lock": {
+        woodblock(ctx, { frequency: 820, seconds: 0.045, gain: 0.2 });
+        woodblock(ctx, { frequency: 1230, seconds: 0.05, gain: 0.16, delay: 0.1 });
+        break;
+      }
+      case "page": {
+        burst(ctx, { seconds: 0.05, type: "bandpass", frequency: 650, gain: 0.18 });
+        burst(ctx, { seconds: 0.12, type: "bandpass", frequency: 1450, gain: 0.15, delay: 0.06 });
+        break;
+      }
+      case "fanfare": {
+        const notes = [392, 523, 659, 784];
+        notes.forEach((n, i) => tone(ctx, { type: "triangle", from: n, seconds: 0.18, gain: 0.16, delay: i * 0.09 }));
+        break;
+      }
+      case "pass":
+        burst(ctx, { seconds: 0.12, type: "lowpass", frequency: 600, gain: 0.16 });
+        tone(ctx, { type: "triangle", from: 175, to: 140, seconds: 0.12, gain: 0.06 });
         break;
       case "coin":
         tone(ctx, { type: "sine", from: 1760, seconds: 0.06, gain: 0.18 });
