@@ -1,6 +1,6 @@
 // Going Once: modals. How to play, Your ledger, and a plain confirm. One at a time, focus trapped.
 
-import { RANKS, PADDLES, rankFor, rankProgress, unlockedPaddles, formatChips, displayStreak } from "../progress.js";
+import { RANKS, PADDLES, ACHIEVEMENTS, rankFor, rankProgress, unlockedPaddles, badgeCount, lifetimeStats, lotsOf, formatChips, displayStreak } from "../progress.js";
 import { formatChips as chips, longDate, ordinal } from "../format.js";
 import { h, cx, mount } from "./dom.js";
 import { paddle, paddleSvg } from "./paddle.js";
@@ -78,11 +78,11 @@ function open({ title, body, opener, labelledBy }) {
 
 export function openHowToPlay(app, opener) {
   const steps = [
-    ["Five lots, one sale.", "Every lot shows only its category and how hard it is: Common, Uncommon or Rare. The question stays sealed until the lot is sold."],
+    ["Seven lots, one sale.", "Every lot shows only its category and how hard it is: Common, Uncommon or Rare. The question stays sealed until the lot is sold."],
     ["Bid in secret.", "You start with 1,000 chips. On lots one to four you may bid up to half your purse: the house limit. Everyone bids at once, and the highest bid of 5 or more takes the lot."],
     ["The winner must answer.", "Right: they gain their bid. Wrong: they lose it, and the runner-up may steal the lot. A steal is answered with the failed winner's choice struck out. Right pays your bid plus half theirs; wrong costs your bid."],
     ["Read the room.", "Three rivals bid against you. Each has strong and weak categories, and each shows a tell before every lot. Tells are a hint, not a promise: some of them bluff."],
-    ["Then the Hammer.", "Lot five is the Hammer. Everyone wagers at least a quarter of their purse and answers the same question. Right gains the wager, wrong loses it. Your final chips are your score."],
+    ["Then the Hammer.", "Lot seven is the Hammer. Everyone wagers at least a quarter of their purse and answers the same question. Right gains the wager, wrong loses it. Your final chips are your score."],
   ];
 
   const body = h(
@@ -136,10 +136,13 @@ export function openLedger(app, opener) {
   const { profile } = app;
   const rank = rankFor(profile.reputation);
   const progress = rankProgress(profile.reputation);
-  const unlocked = unlockedPaddles(profile.reputation);
+  const badges = badgeCount(profile);
+  const unlocked = unlockedPaddles(profile.reputation, badges);
   const history = profile.history.slice(-10).reverse();
   const streak = displayStreak(profile, app.today);
   const avg = profile.played ? Math.round(profile.totalChips / profile.played) : 0;
+  const lifetime = lifetimeStats(profile);
+  const favouredText = lifetime.favoured ? `${lifetime.favoured.category} (${Math.round(lifetime.favoured.rate * 100)}%)` : "—";
 
   const picker = h(
     "div",
@@ -147,7 +150,8 @@ export function openLedger(app, opener) {
     PADDLES.map((p) => {
       const locked = !unlocked.some((u) => u.id === p.id);
       const selected = profile.paddle === p.id;
-      const unlockRank = RANKS[p.rankIndex];
+      const unlockRank = p.badges ? null : RANKS[p.rankIndex];
+      const lockText = p.badges ? `${p.badges} badges` : unlockRank.title;
       return h(
         "button",
         {
@@ -157,7 +161,7 @@ export function openLedger(app, opener) {
           "aria-checked": String(selected),
           "aria-disabled": locked ? "true" : null,
           disabled: locked || null,
-          "aria-label": locked ? `${p.name}, unlocks at ${unlockRank.title}` : `${p.name}${selected ? ", selected" : ""}`,
+          "aria-label": locked ? `${p.name}, unlocks at ${lockText}` : `${p.name}${selected ? ", selected" : ""}`,
           onclick: () => {
             app.profile = { ...app.profile, paddle: p.id };
             app.persistProfile();
@@ -168,7 +172,7 @@ export function openLedger(app, opener) {
         },
         h("span", { class: "paddlechoice__art", html: paddleSvg({ tone: p, size: 74, tilt: -4 }) }),
         h("span", { class: "paddlechoice__name" }, p.name),
-        locked ? h("span", { class: "paddlechoice__lock" }, `Unlocks at ${unlockRank.title}`) : null,
+        locked ? h("span", { class: "paddlechoice__lock" }, `Unlocks at ${lockText}`) : null,
       );
     }),
   );
@@ -203,12 +207,43 @@ export function openLedger(app, opener) {
       stat("Streak", String(streak)),
       stat("Best streak", String(profile.bestStreak)),
     ),
+    h("h3", { class: "ledger-modal__head" }, "On the books — lifetime"),
+    h(
+      "div",
+      { class: "scorecard" },
+      scorecardCell("Lots won", String(lifetime.lotsWon), `${lifetime.lotsWon + lifetime.lotsLost ? Math.round((lifetime.lotsWon / (lifetime.lotsWon + lifetime.lotsLost)) * 100) : 0}% of lots played`),
+      scorecardCell("Right answers", lifetime.answeredRight === 0 && lifetime.answered === 0 ? "—" : `${lifetime.answeredRight} of ${lifetime.answered}`, lifetime.accuracy === null ? "No answers yet" : `${lifetime.accuracy}% overall`),
+      scorecardCell("Common / Uncommon / Rare", [lifetime.byDifficulty[1], lifetime.byDifficulty[2], lifetime.byDifficulty[3]].map((v) => (v === null ? "—" : `${v}%`)).join(" / "), "Accuracy by difficulty"),
+      scorecardCell("Favoured topic", favouredText, "Your surest shelf in the saleroom"),
+      scorecardCell("Steals", String(lifetime.steals), "Lots won on the steal"),
+      scorecardCell("Hammer lots won", lifetime.hammersPlayed ? `${lifetime.hammersWon} of ${lifetime.hammersPlayed}` : "—", "The Hammer lot is worth double"),
+      scorecardCell("Best Hammer haul", lifetime.bestHammer ? chips(lifetime.bestHammer) : "—", "Most chips taken at the Hammer"),
+    ),
+    h("h3", { class: "ledger-modal__head" }, `Saleroom badges ${badges} of ${ACHIEVEMENTS.length}`),
+    h(
+      "div",
+      { class: "badgegrid" },
+      ACHIEVEMENTS.map((a) => {
+        const earned = profile.achievements && profile.achievements[a.id];
+        return h(
+          "div",
+          { class: cx("badgeslot", earned && "badgeslot--earned"), "data-badge": a.id, role: "img", "aria-label": `${a.name}${earned ? `, earned ${longDate(earned)}` : `, locked. ${a.hint}`}` },
+          h("span", { class: "badgeslot__seal", "aria-hidden": "true" }, earned ? "✦" : "?"),
+          h(
+            "div",
+            null,
+            h("p", { class: "badgeslot__name" }, a.name),
+            h("p", { class: "badgeslot__hint" }, earned ? `Earned ${longDate(earned)}` : a.hint),
+          ),
+        );
+      }),
+    ),
     h("h3", { class: "ledger-modal__head" }, "The last ten sales"),
     history.length
       ? h(
           "table",
           { class: "ledger" },
-          h("thead", null, h("tr", null, h("th", { scope: "col" }, "Sale"), h("th", { scope: "col", class: "num" }, "Chips"), h("th", { scope: "col", class: "num" }, "Rank"))),
+          h("thead", null, h("tr", null, h("th", { scope: "col" }, "Sale"), h("th", { scope: "col" }, "Lots"), h("th", { scope: "col", class: "num" }, "Chips"), h("th", { scope: "col", class: "num" }, "Rank"))),
           h(
             "tbody",
             null,
@@ -217,6 +252,7 @@ export function openLedger(app, opener) {
                 "tr",
                 null,
                 h("th", { scope: "row", class: "ledger-modal__date" }, longDate(entry.date)),
+                h("td", null, lotsCell(entry)),
                 h("td", { class: "num" }, chips(entry.chips)),
                 h("td", { class: "num" }, ordinal(entry.rank)),
               ),
@@ -231,6 +267,22 @@ export function openLedger(app, opener) {
 
 function stat(label, value) {
   return h("div", null, h("dt", null, label), h("dd", null, value));
+}
+
+function scorecardCell(label, value, hint) {
+  return h(
+    "div",
+    { class: "scorecard__cell" },
+    h("p", { class: "label" }, label),
+    h("p", { class: "scorecard__num num" }, value),
+    h("p", { class: "scorecard__hint" }, hint),
+  );
+}
+
+function lotsCell(entry) {
+  const cells = lotsOf(entry);
+  if (!cells.length) return h("span", { class: "lotglyph lotglyph--pass" }, "—");
+  return h("span", { class: "lotglyph", title: "■ won · ◆ stole · □ lost · · passed in" }, cells.join(""));
 }
 
 /* ------------------------------------------------------------------ confirm */
