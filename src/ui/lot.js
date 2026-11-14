@@ -197,13 +197,15 @@ function bidControl(app, handlers) {
       h("p", { class: "bidcontrol__empty" }, "You have no chips to bid."),
       h(
         "button",
-        { class: "btn btn--primary btn--wide", type: "button", "data-confirm": "", onclick: handlers.onConfirmBid, disabled: disabled || null },
+        { class: "btn btn--primary btn--wide", type: "button", "data-confirm": "", "data-own-sound": "", onclick: handlers.onConfirmBid, disabled: disabled || null },
         lot.isHammer ? "Raise the Hammer" : "Sit this one out",
       ),
     );
   }
 
   const picks = quickPicks(bounds, lot.isHammer);
+  let lastRulerTick = 0;
+  let lastRulerValue = Number(bid) || 0;
   const range = h("input", {
     class: "ruler",
     type: "range",
@@ -213,7 +215,16 @@ function bidControl(app, handlers) {
     value: String(bid),
     "data-range": "",
     "aria-label": lot.isHammer ? "Your wager" : "Your bid",
-    oninput: (e) => handlers.onBidChange(snapBid(e.target.value, bounds)),
+    oninput: (e) => {
+      const now = Date.now();
+      const v = Number(e.target.value) || 0;
+      if (now - lastRulerTick > 65 && Math.abs(v - lastRulerValue) >= STEP) {
+        sound.play("ruler-tick");
+        lastRulerTick = now;
+        lastRulerValue = v;
+      }
+      handlers.onBidChange(snapBid(e.target.value, bounds));
+    },
   });
   const number = h("input", {
     class: "field",
@@ -267,7 +278,10 @@ function bidControl(app, handlers) {
                 class: cx("quickpick", bid === pick.amount && "quickpick--on"),
                 type: "button",
                 "data-pick": pick.id,
-                onclick: () => handlers.onBidChange(pick.amount),
+                onclick: () => {
+                  sound.play(pick.amount > 0 ? "chips" : "pass");
+                  handlers.onBidChange(pick.amount);
+                },
               },
               pick.label,
             ),
@@ -281,7 +295,7 @@ function bidControl(app, handlers) {
       {
         class: "btn btn--primary btn--wide btn--big",
         type: "button",
-        "data-confirm": "",
+        "data-confirm": "", "data-own-sound": "",
         onclick: handlers.onConfirmBid,
         disabled: disabled || null,
       },
