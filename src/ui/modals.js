@@ -312,3 +312,62 @@ export function openConfirm({ title, text, confirmLabel, onConfirm, opener }) {
   );
   return open({ title, body, opener, labelledBy: "confirm-title" });
 }
+
+/* ------------------------------------------------------------------ endless/evening table */
+
+export function openEndless(app, opener) {
+  let lotCount = 10;
+  const choices = [7, 10, 15, 20];
+
+  const optionButtons = choices.map((n) =>
+    h(
+      "button",
+      {
+        class: "btn btn--ghost endless__choice",
+        type: "button",
+        role: "radio",
+        "aria-checked": String(n === lotCount),
+        "data-lots": String(n),
+        onclick: (event) => {
+          lotCount = n;
+          const group = event.currentTarget.closest(".endless__choices");
+          if (group) {
+            group.querySelectorAll(".endless__choice").forEach((btn) => btn.setAttribute("aria-checked", String(Number(btn.getAttribute("data-lots")) === lotCount)));
+          }
+        },
+      },
+      `${n} lots`,
+    ),
+  );
+
+  const body = h(
+    "div",
+    { class: "endless" },
+    h("p", null, "An unrecorded sale for no particular occasion. Three strangers from the ninety chairs are drawn by chance."),
+    h("p", null, "Chips here do not count towards reputation, badges or the ledger. The daily sale is the only tally that lasts."),
+    h("h3", { class: "ledger-modal__head" }, "Length of the sale"),
+    h(
+      "div",
+      { class: "endless__choices", role: "radiogroup", "aria-label": "Number of lots" },
+      optionButtons,
+    ),
+    h(
+      "div",
+      { class: "confirm__actions" },
+      h(
+        "button",
+        {
+          class: "btn btn--primary",
+          type: "button",
+          onclick: () => {
+            closeModal();
+            app.startEndless(lotCount);
+          },
+        },
+        "Open the table",
+      ),
+    ),
+  );
+
+  return open({ title: "Evening table", body, opener, labelledBy: "endless-title" });
+}
