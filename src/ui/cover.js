@@ -136,6 +136,11 @@ export function coverScreen(app, handlers) {
       { class: "btn btn--ghost cover__room-btn", type: "button", onclick: handlers.onPrivateRoom, "data-action": "private-room" },
       "Private room — play with friends",
     ),
+    h(
+      "button",
+      { class: "btn btn--ghost cover__room-btn", type: "button", onclick: handlers.onEndless, "data-action": "evening" },
+      "Evening table — unrecorded sale",
+    ),
     finished
       ? h(
           "p",
