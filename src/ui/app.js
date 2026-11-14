@@ -181,6 +181,13 @@ export function startApp({ root, devDate = null } = {}) {
 
   /* ---------------------------------------------------------------- storage */
 
+  root.addEventListener("click", (event) => {
+    const btn = event.target.closest("button");
+    if (!btn || btn.disabled) return;
+    if (btn.closest("[data-own-sound]")) return;
+    sound.play("click");
+  });
+
   function loadAll() {
     const loaded = store.load(app.today);
     app.profile = loaded.profile;
@@ -248,7 +255,7 @@ export function startApp({ root, devDate = null } = {}) {
 
   function startEndless(lotCount) {
     sound.unlock();
-    sound.play("flick");
+    sound.play("page");
     app.endless = true;
     app.endlessLots = Math.max(7, Math.min(20, Math.floor(lotCount) || 10));
     app.state = createRoomGame(
@@ -366,6 +373,7 @@ export function startApp({ root, devDate = null } = {}) {
 
   function startOrResume() {
     sound.unlock();
+    sound.play("page");
     if (!app.state) {
       newGame();
       openIntroIfNeeded();
@@ -421,7 +429,7 @@ export function startApp({ root, devDate = null } = {}) {
     const amount = lot.isHammer ? snapBid(app.bid, bounds) : snapBid(app.bid, bounds);
     if (app.roomClient && app.roomClient.phase === "playing") {
       if (app.roomLockedBid != null) return;
-      if (amount > 0) sound.play("flick");
+      if (amount > 0) sound.play("lock");
       app.roomLockedBid = amount;
       if (app.roomClient.isHost && app.roomHost) app.roomHost.noteBid("h-1", amount);
       else app.roomClient.publishAction({ t: "bid", amount });
@@ -431,7 +439,7 @@ export function startApp({ root, devDate = null } = {}) {
       playReveal();
       return;
     }
-    if (amount > 0) sound.play("flick");
+    if (amount > 0) sound.play("lock");
     if (!dispatch({ type: "bid", amount })) return;
     app.selection = null;
     app.revealDone = false;
@@ -515,7 +523,6 @@ export function startApp({ root, devDate = null } = {}) {
     app.selection = null;
     app.timer = { stage: "stealing", lotIndex: app.state.lotIndex, startedAt: Date.now(), duration: STEAL_MS };
     persist();
-    sound.play("flick");
     render();
   }
 
@@ -549,7 +556,7 @@ export function startApp({ root, devDate = null } = {}) {
     if (!app.state || app.state.phase !== "resolved") return;
     if (app.roomClient) {
       if (app.roomClient.isSocket) {
-        sound.play("flick");
+        sound.play("page");
         app.roomClient.publishAction({ t: "advance" });
         app.selection = null;
         app.revealDone = false;
@@ -558,7 +565,7 @@ export function startApp({ root, devDate = null } = {}) {
         return; // the house relay turns the page
       }
       if (!app.roomClient.isHost || !app.roomHost) return;
-      sound.play("flick");
+      sound.play("page");
       app.roomHost.nextLot();
       app.selection = null;
       app.revealDone = false;
@@ -566,7 +573,7 @@ export function startApp({ root, devDate = null } = {}) {
       app.roomLockedBid = null;
       return; // roomHostUpdated renders the next lot
     }
-    sound.play("flick");
+    sound.play("page");
     const exiting = root.querySelector("[data-lot-screen]");
     const commit = () => {
       if (!dispatch({ type: "next" })) return;
@@ -793,6 +800,7 @@ export function startApp({ root, devDate = null } = {}) {
       });
       app.profile = result.profile;
       app.lastResult = result;
+      if (result.rankedUp) sound.play("fanfare");
       persistProfile();
     } else if (!app.lastResult) {
       const chips = app.state.banks.player;
