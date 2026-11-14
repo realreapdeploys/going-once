@@ -532,20 +532,29 @@ export function startApp({ root, devDate = null } = {}) {
       return; // roomHostUpdated renders the next lot
     }
     sound.play("flick");
-    if (!dispatch({ type: "next" })) return;
-    app.selection = null;
-    app.revealDone = false;
-    app.timer = null;
-    if (app.state.phase === "bidding") {
-      const lot = currentLot(app.state);
-      const bounds = bidBounds(app.state);
-      app.bid = lot.isHammer ? bounds.min : 0;
+    const exiting = root.querySelector("[data-lot-screen]");
+    const commit = () => {
+      if (!dispatch({ type: "next" })) return;
+      app.selection = null;
+      app.revealDone = false;
+      app.timer = null;
+      if (app.state.phase === "bidding") {
+        const lot = currentLot(app.state);
+        const bounds = bidBounds(app.state);
+        app.bid = lot.isHammer ? bounds.min : 0;
+      }
+      render();
+      if (app.state.phase === "finished") return;
+      const seq = clock.begin();
+      const screen = root.querySelector("[data-lot-screen]");
+      if (screen) screen.dispatchEvent(new CustomEvent("goingonce:newlot", { detail: { seq } }));
+    };
+    if (exiting && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      exiting.classList.add("sheet--exit");
+      window.setTimeout(commit, 210);
+      return;
     }
-    render();
-    if (app.state.phase === "finished") return;
-    const seq = clock.begin();
-    const screen = root.querySelector("[data-lot-screen]");
-    if (screen) screen.dispatchEvent(new CustomEvent("goingonce:newlot", { detail: { seq } }));
+    commit();
   }
 
 
@@ -741,6 +750,7 @@ export function startApp({ root, devDate = null } = {}) {
         date: app.today,
         chips: app.state.banks.player,
         rank: playerRank(app.state),
+        records: app.state.history,
       });
       app.profile = result.profile;
       app.lastResult = result;
