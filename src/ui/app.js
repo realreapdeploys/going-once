@@ -819,7 +819,18 @@ export function startApp({ root, devDate = null } = {}) {
       onLedger: (opener) => openLedger(app, opener),
       onSound: toggleSound,
       onAgain: () => startEndless(app.endlessLots || 10),
-      onHome: () => exitEndless(),
+      onHome: () => {
+        if (app.endless) exitEndless();
+        else {
+          app.state = null;
+          app.actions = [];
+          app.timer = null;
+          app.selection = null;
+          app.stealStage = false;
+          app.screen = "cover";
+          render();
+        }
+      },
       onPlayNew: () => {
         app.today = localDateString();
         app.state = null;
