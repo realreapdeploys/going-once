@@ -44,19 +44,26 @@ function playOne(seed, player) {
 function report(player) {
   let wins = 0, chips = 0, bidWins = 0, lots = 0;
   const botWins = new Map();
+  const botLotWins = new Map();
   for (let i = 0; i < SIMS; i++) {
     const sale = playOne(`${player.id}|${i}|${Math.random()}`, player);
     const row = sale.final.find((r) => r.id === "h-1");
     chips += row.chips;
     if (row.rank === 1) wins++;
     for (const r of sale.final) if (r.id !== "h-1" && r.rank === 1) botWins.set(r.name, (botWins.get(r.name) ?? 0) + 1);
-    for (const rec of sale.history) { lots++; if (rec.winnerId === "h-1") bidWins++; }
+    for (const rec of sale.history) {
+      lots++;
+      if (rec.winnerId === "h-1") bidWins++;
+      else if (rec.winnerId) botLotWins.set(rec.winnerId, (botLotWins.get(rec.winnerId) ?? 0) + 1);
+    }
   }
   const bots = [...botWins.entries()].sort((a, b) => b[1] - a[1]);
   console.log(`\n${player.label}`);
   console.log(`  wins the sale ${(wins / SIMS * 100).toFixed(1)}% of the time, ends on ${Math.round(chips / SIMS)} chips`);
   console.log(`  wins the bid on ${(bidWins / lots * 100).toFixed(0)}% of lots`);
   console.log(`  bot wins: ${bots.map(([n, v]) => `${n} ${((v / SIMS) * 100).toFixed(0)}%`).join(" · ") || "none"}`);
+  const lotWins = [...botLotWins.entries()].map(([id, v]) => `${id} ${v}`).sort((a, b) => b[1] - a[1]);
+  console.log(`  lot-bid wins by bot: ${lotWins.join(" · ") || "none"}`);
 }
 
 const only = process.argv[2];
