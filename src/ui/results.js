@@ -383,6 +383,7 @@ export function resultsScreen(app, handlers) {
         : h(
             "div",
             { class: "results__actions" },
+            h("button", { class: "btn btn--ghost", type: "button", onclick: handlers.onHome }, "Back to the cover"),
             h("button", { class: "btn btn--ghost", type: "button", onclick: (e) => handlers.onHowTo(e.currentTarget) }, "How to play"),
             h("button", { class: "btn btn--ghost", type: "button", onclick: (e) => handlers.onLedger(e.currentTarget) }, "Your ledger"),
             soundToggle(app.profile, handlers.onSound),
