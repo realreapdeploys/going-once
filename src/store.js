@@ -5,7 +5,7 @@
 // can only ever be rejected, never trusted.
 
 import { ENGINE_VERSION, isValidDateString, replay, addDays } from "./engine.js";
-import { emptyProfile } from "./progress.js";
+import { emptyProfile, sanitizeStats, sanitizeAchievements } from "./progress.js";
 
 export const STORAGE_KEY = "goingonce:v1";
 export const KEEP_DAYS = 14;
@@ -59,9 +59,34 @@ export function sanitizeProfile(raw) {
               Number.isFinite(h.rank) &&
               Number.isFinite(h.rep),
           )
-          .map((h) => ({ date: h.date, chips: h.chips, rank: h.rank, rep: h.rep }))
+          .map((h) => {
+            const entry = { date: h.date, chips: h.chips, rank: h.rank, rep: h.rep };
+            if (typeof h.lots === "string") {
+              const parts = h.lots.split(",");
+              if (parts.length > 0 && parts.length <= 20 && parts.every((p) => ["won", "stole", "lost", "pass"].includes(p))) entry.lots = h.lots;
+            }
+            if (Number.isFinite(h.won) && h.won >= 0) entry.won = Math.floor(h.won);
+            if (Number.isFinite(h.lost) && h.lost >= 0) entry.lost = Math.floor(h.lost);
+            if (Number.isFinite(h.steals) && h.steals >= 0) entry.steals = Math.floor(h.steals);
+            if (isPlainObject(h.hammer)) {
+              entry.hammer = {
+                correct: Boolean(h.hammer.correct),
+                alone: Boolean(h.hammer.alone),
+                chips: Number.isFinite(h.hammer.chips) && h.hammer.chips >= 0 ? Math.floor(h.hammer.chips) : 0,
+              };
+            }
+            return entry;
+          })
           .slice(-120);
       }
+      continue;
+    }
+    if (key === "achievements") {
+      out.achievements = sanitizeAchievements(value);
+      continue;
+    }
+    if (key === "stats") {
+      out.stats = sanitizeStats(value);
       continue;
     }
     if (key === "lastCompletedDate") {
