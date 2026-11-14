@@ -227,3 +227,17 @@ engine, listed for honesty):
   good draft, not gospel, and verify anything you hear quoted in a pub argument.
 - No accounts, leaderboards or sync: progress is per device, per browser.
 - Share text is copied to the clipboard or shown selectable; there is no share sheet integration.
+
+## The sale ledger at a glance
+
+The results screen and Your Ledger (cover menu or after a sale) now show: the seven lots as a
+compact grid plus seven print-style stamps on the sale ledger, a "reputation earned today" plate
+with a swept progress bar, a saleroom badge cabinet (six badges earned on real results: first sale,
+five steals, a sale without a forfeit, sole-right-on-the-Hammer, profit on all seven lots, heavy
+pockets at 2,500+ chips), a lifetime scorecard (lots won, accuracy overall and by difficulty,
+favoured category, steals, Hammer record, best Hammer haul) and the last ten sales as glyph rows.
+Sticklers for the auction-house aesthetic will notice the redesigned motion pass — sheets, panels,
+options and stamps now ease onto the page; everything eases out again when the lot turns over.
+The "laurel and brass" paddle unlocks at three badges.
+
+Private-room sales are not scored into your personal ledger or badges; only the daily sale counts.
