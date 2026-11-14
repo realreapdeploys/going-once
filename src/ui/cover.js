@@ -130,7 +130,7 @@ export function coverScreen(app, handlers) {
   const cta = h(
     "div",
     { class: "cover__cta" },
-    h("button", { class: "btn btn--primary btn--big", type: "button", onclick: handlers.onStart, "data-action": "start" }, buttonLabel),
+    h("button", { class: "btn btn--primary btn--big", type: "button", onclick: handlers.onStart, "data-action": "start", "data-own-sound": "" }, buttonLabel),
     h(
       "button",
       { class: "btn btn--ghost cover__room-btn", type: "button", onclick: handlers.onPrivateRoom, "data-action": "private-room" },
